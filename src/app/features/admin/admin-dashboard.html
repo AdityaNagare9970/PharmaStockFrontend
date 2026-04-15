@@ -1,0 +1,53 @@
+<div class="min-vh-100 bg-light">
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark bg-primary px-4 py-3">
+    <span class="navbar-brand fw-bold fs-5">🏥 PharmaStock — <span class="opacity-75 fs-6">Admin</span></span>
+    <button class="btn btn-outline-light btn-sm" (click)="logout()">Logout</button>
+  </nav>
+
+  <div class="container py-4">
+    <h6 class="text-muted text-uppercase fw-semibold mb-3 small tracking-wide">Admin Modules</h6>
+
+    <div class="row g-3">
+
+      <div class="col-sm-6 col-md-4">
+        <a routerLink="/admin/locations" class="card border-0 shadow-sm text-decoration-none h-100 card-hover">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <span class="fs-2">📦</span>
+            <div>
+              <p class="mb-0 fw-semibold text-dark">Location Management</p>
+              <p class="mb-0 text-muted small">Add, edit, delete locations</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <a routerLink="/admin/users" class="card border-0 shadow-sm text-decoration-none h-100 card-hover">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <span class="fs-2">👤</span>
+            <div>
+              <p class="mb-0 fw-semibold text-dark">User Management</p>
+              <p class="mb-0 text-muted small">Manage system users</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <a routerLink="/admin/bins" class="card border-0 shadow-sm text-decoration-none h-100 card-hover">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <span class="fs-2">🗃</span>
+            <div>
+              <p class="mb-0 fw-semibold text-dark">Bin Management</p>
+              <p class="mb-0 text-muted small">Manage storage bins</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
