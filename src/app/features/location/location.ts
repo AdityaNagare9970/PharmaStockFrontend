@@ -2,7 +2,7 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { LocationService } from '../../core/services/location.service';
-import { Location, LocationType, CreateLocation, UpdateLocation } from '../../core/models/location.model';
+import { Location, LocationTypeEnum, CreateLocation, UpdateLocation } from '../../core/models/location.model';
 import { finalize } from 'rxjs';
 
 type ActiveView = 'list' | 'add' | 'update';
@@ -17,9 +17,7 @@ export class LocationComponent implements OnInit {
 
   activeView = signal<ActiveView>('list');
 
-  locations    = signal<Location[]>([]);
-  locationTypes = signal<LocationType[]>([]);
-
+  locations = signal<Location[]>([]);
   searchQuery = signal('');
 
   filteredLocations = computed(() => {
@@ -50,14 +48,12 @@ export class LocationComponent implements OnInit {
 
   ngOnInit() {
     this.loadAll();
-    this.locationService.getTypes().subscribe(types => this.locationTypes.set(types));
   }
 
   // ── Helpers ──────────────────────────────────────────
 
   getTypeName(typeId: number): string {
-    const match = this.locationTypes().find(t => t.locationTypeId === typeId);
-    return match ? match.typeName : `Type ${typeId}`;
+    return LocationTypeEnum[typeId] ?? `Type ${typeId}`;
   }
 
   getParentName(parentId: number | null): string {
