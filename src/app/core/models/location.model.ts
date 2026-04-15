@@ -6,6 +6,11 @@ export interface Location {
   statusId: boolean;
 }
 
+export interface LocationType {
+  locationTypeId: number;
+  typeName: string;
+}
+
 export interface CreateLocation {
   name: string;
   locationTypeId: number;

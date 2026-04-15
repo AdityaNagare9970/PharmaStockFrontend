@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-50">
+<div class="min-vh-100 bg-gray-50">
 
   <!-- Header -->
   <div class="bg-white border-bottom shadow-sm px-4 py-3 d-flex align-items-center justify-content-between">
@@ -6,107 +6,135 @@
       <span class="fs-4">📦</span>
       <h5 class="mb-0 fw-bold text-primary">Location Management</h5>
     </div>
-    <a routerLink="/dashboard" class="btn btn-outline-secondary btn-sm">← Back</a>
+    <a routerLink="/admin" class="btn btn-outline-secondary btn-sm">← Back</a>
   </div>
 
   <div class="container-fluid px-4 py-4">
 
-    <!-- Tab Navigation -->
-    <div class="d-flex flex-wrap gap-2 mb-4">
-
-      <button
-        class="btn btn-sm fw-semibold d-flex align-items-center gap-1 tab-btn"
-        [class.btn-primary]="activeTab() === 'list'"
-        [class.btn-outline-primary]="activeTab() !== 'list'"
-        (click)="setTab('list'); loadAll()">
+    <!-- Tab Buttons -->
+    <div class="d-flex gap-2 mb-4">
+      <button class="btn btn-sm fw-semibold tab-btn"
+        [class.btn-primary]="activeView() === 'list'"
+        [class.btn-outline-primary]="activeView() !== 'list'"
+        (click)="setView('list')">
         🗂 All Locations
       </button>
-
-      <button
-        class="btn btn-sm fw-semibold d-flex align-items-center gap-1 tab-btn"
-        [class.btn-success]="activeTab() === 'add'"
-        [class.btn-outline-success]="activeTab() !== 'add'"
-        (click)="setTab('add')">
+      <button class="btn btn-sm fw-semibold tab-btn"
+        [class.btn-success]="activeView() === 'add'"
+        [class.btn-outline-success]="activeView() !== 'add'"
+        (click)="setView('add')">
         ➕ Add Location
       </button>
-
-      <button
-        class="btn btn-sm fw-semibold d-flex align-items-center gap-1 tab-btn"
-        [class.btn-info]="activeTab() === 'getById'"
-        [class.btn-outline-info]="activeTab() !== 'getById'"
-        (click)="setTab('getById')">
-        🔍 Get By ID
-      </button>
-
-      <button
-        class="btn btn-sm fw-semibold d-flex align-items-center gap-1 tab-btn"
-        [class.btn-warning]="activeTab() === 'update'"
-        [class.btn-outline-warning]="activeTab() !== 'update'"
-        (click)="setTab('update')">
-        ✏️ Update
-      </button>
-
-      <button
-        class="btn btn-sm fw-semibold d-flex align-items-center gap-1 tab-btn"
-        [class.btn-danger]="activeTab() === 'delete'"
-        [class.btn-outline-danger]="activeTab() !== 'delete'"
-        (click)="setTab('delete')">
-        🗑 Delete
-      </button>
-
     </div>
 
-    <!-- Feedback Messages -->
+    <!-- Feedback -->
     @if (successMessage()) {
-      <div class="alert alert-success alert-dismissible d-flex align-items-center gap-2 py-2">
-        <span>✅</span> {{ successMessage() }}
+      <div class="alert alert-success d-flex align-items-center gap-2 py-2 mb-3">
+        ✅ {{ successMessage() }}
       </div>
     }
     @if (errorMessage()) {
-      <div class="alert alert-danger d-flex align-items-center gap-2 py-2">
-        <span>❌</span> {{ errorMessage() }}
+      <div class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-3">
+        <span class="fs-5">❌</span>
+        <div>
+          <strong>Error</strong><br>
+          <span class="small">{{ errorMessage() }}</span>
+        </div>
       </div>
     }
 
-    <!-- ── ALL LOCATIONS ─────────────────────────────────────── -->
-    @if (activeTab() === 'list') {
+    <!-- ══════════════════════════════════════════════════
+         LIST VIEW
+    ═══════════════════════════════════════════════════ -->
+    @if (activeView() === 'list') {
+
+      <!-- Search Bar -->
+      <div class="mb-3" style="max-width: 420px;">
+        <div class="input-group">
+          <span class="input-group-text bg-white">🔍</span>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search by name or ID..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+            name="search"
+          />
+          @if (searchQuery()) {
+            <button class="btn btn-outline-secondary" type="button" (click)="searchQuery.set('')">✕</button>
+          }
+        </div>
+      </div>
+
       <div class="card shadow-sm border-0">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
-          <span class="fw-semibold">All Locations</span>
+          <span class="fw-semibold">
+            All Locations
+            @if (searchQuery()) {
+              <span class="badge bg-white text-primary ms-2">{{ filteredLocations().length }} result(s)</span>
+            }
+          </span>
           <button class="btn btn-light btn-sm" (click)="loadAll()" [disabled]="isLoading()">
-            @if (isLoading()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            @if (isLoading()) {
+              <span class="spinner-border spinner-border-sm me-1"></span>
+            }
             Refresh
           </button>
         </div>
+
         <div class="card-body p-0">
-          @if (locations().length === 0) {
+          @if (isLoading() && locations().length === 0) {
+            <div class="text-center py-5 text-muted">
+              <div class="spinner-border text-primary mb-2"></div>
+              <p class="small">Loading locations...</p>
+            </div>
+          } @else if (filteredLocations().length === 0) {
             <div class="text-center py-5 text-muted">
               <p class="fs-4 mb-1">📭</p>
-              <p class="small">No locations found. Click Refresh to load.</p>
+              <p class="small">{{ searchQuery() ? 'No locations match your search.' : 'No locations found.' }}</p>
             </div>
           } @else {
             <div class="table-responsive">
-              <table class="table table-hover table-striped mb-0">
+              <table class="table table-hover mb-0 align-middle">
                 <thead class="table-light">
                   <tr>
-                    <th class="ps-3">ID</th>
+                    <th class="ps-4">ID</th>
                     <th>Name</th>
-                    <th>Type ID</th>
-                    <th>Parent ID</th>
+                    <th>Type</th>
+                    <th>Parent</th>
                     <th>Status</th>
+                    <th class="text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (loc of locations(); track loc.locationId) {
+                  @for (loc of filteredLocations(); track loc.locationId) {
                     <tr>
-                      <td class="ps-3 fw-semibold text-primary">{{ loc.locationId }}</td>
-                      <td>{{ loc.name }}</td>
-                      <td>{{ loc.locationTypeId }}</td>
-                      <td>{{ loc.parentLocationId ?? '—' }}</td>
+                      <td class="ps-4 fw-semibold text-primary">{{ loc.locationId }}</td>
+                      <td class="fw-medium">{{ loc.name }}</td>
+                      <td class="text-muted small">{{ getTypeName(loc.locationTypeId) }}</td>
+                      <td class="text-muted small">{{ getParentName(loc.parentLocationId) }}</td>
                       <td>
-                        <span class="badge" [class.bg-success]="loc.statusId" [class.bg-secondary]="!loc.statusId">
+                        <span class="badge rounded-pill"
+                          [class.bg-success]="loc.statusId"
+                          [class.bg-secondary]="!loc.statusId">
                           {{ loc.statusId ? 'Active' : 'Inactive' }}
                         </span>
+                      </td>
+                      <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                          <button
+                            class="btn btn-sm btn-outline-warning fw-medium"
+                            style="min-width: 72px;"
+                            (click)="openUpdate(loc)">
+                            ✏️ Edit
+                          </button>
+                          <button
+                            class="btn btn-sm btn-outline-danger fw-medium"
+                            style="min-width: 72px;"
+                            (click)="confirmDelete(loc)">
+                            🗑 Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   }
@@ -118,8 +146,10 @@
       </div>
     }
 
-    <!-- ── ADD LOCATION ──────────────────────────────────────── -->
-    @if (activeTab() === 'add') {
+    <!-- ══════════════════════════════════════════════════
+         ADD VIEW
+    ═══════════════════════════════════════════════════ -->
+    @if (activeView() === 'add') {
       <div class="card shadow-sm border-0" style="max-width: 520px;">
         <div class="card-header bg-success text-white py-3">
           <span class="fw-semibold">➕ Add New Location</span>
@@ -140,85 +170,50 @@
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-medium">Parent Location ID <span class="text-muted small">(optional)</span></label>
+              <label class="form-label fw-medium">
+                Parent Location
+                <span class="text-muted small fw-normal">(optional)</span>
+              </label>
               <input type="number" class="form-control" placeholder="Leave empty if none"
                 [(ngModel)]="newLocation.parentLocationId" name="parentLocationId" />
             </div>
 
-            <div class="mb-4 d-flex align-items-center gap-2">
+            <div class="mb-4 form-check">
               <input type="checkbox" class="form-check-input" id="statusAdd"
                 [(ngModel)]="newLocation.statusId" name="statusId" />
               <label class="form-check-label fw-medium" for="statusAdd">Active</label>
             </div>
 
-            <button type="submit" class="btn btn-success w-100" [disabled]="isLoading()">
-              @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-              Create Location
-            </button>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success flex-fill" [disabled]="isLoading()">
+                @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                Create Location
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">
+                Cancel
+              </button>
+            </div>
 
           </form>
         </div>
       </div>
     }
 
-    <!-- ── GET BY ID ─────────────────────────────────────────── -->
-    @if (activeTab() === 'getById') {
+    <!-- ══════════════════════════════════════════════════
+         UPDATE VIEW  (pre-filled from row click)
+    ═══════════════════════════════════════════════════ -->
+    @if (activeView() === 'update') {
       <div class="card shadow-sm border-0" style="max-width: 520px;">
-        <div class="card-header bg-info text-white py-3">
-          <span class="fw-semibold">🔍 Get Location by ID</span>
-        </div>
-        <div class="card-body p-4">
-
-          <div class="d-flex gap-2 mb-4">
-            <input type="number" class="form-control" placeholder="Enter Location ID"
-              [ngModel]="searchId()" (ngModelChange)="searchId.set($event)" name="searchId" min="1" />
-            <button class="btn btn-info text-white px-4" (click)="searchById()" [disabled]="isLoading()">
-              @if (isLoading()) { <span class="spinner-border spinner-border-sm"></span> }
-              @else { Search }
-            </button>
-          </div>
-
-          @if (foundLocation()) {
-            <div class="rounded-3 border p-3 bg-light">
-              <p class="mb-1"><span class="fw-semibold text-muted small">ID</span><br>{{ foundLocation()!.locationId }}</p>
-              <hr class="my-2">
-              <p class="mb-1"><span class="fw-semibold text-muted small">NAME</span><br>{{ foundLocation()!.name }}</p>
-              <hr class="my-2">
-              <p class="mb-1"><span class="fw-semibold text-muted small">TYPE ID</span><br>{{ foundLocation()!.locationTypeId }}</p>
-              <hr class="my-2">
-              <p class="mb-1"><span class="fw-semibold text-muted small">PARENT ID</span><br>{{ foundLocation()!.parentLocationId ?? '—' }}</p>
-              <hr class="my-2">
-              <p class="mb-0">
-                <span class="fw-semibold text-muted small">STATUS</span><br>
-                <span class="badge" [class.bg-success]="foundLocation()!.statusId" [class.bg-secondary]="!foundLocation()!.statusId">
-                  {{ foundLocation()!.statusId ? 'Active' : 'Inactive' }}
-                </span>
-              </p>
-            </div>
-          }
-
-        </div>
-      </div>
-    }
-
-    <!-- ── UPDATE ────────────────────────────────────────────── -->
-    @if (activeTab() === 'update') {
-      <div class="card shadow-sm border-0" style="max-width: 520px;">
-        <div class="card-header bg-warning py-3">
-          <span class="fw-semibold">✏️ Update Location</span>
+        <div class="card-header bg-warning py-3 d-flex align-items-center justify-content-between">
+          <span class="fw-semibold">✏️ Update Location — <span class="text-dark opacity-75">{{ updateData.name }}</span></span>
+          <span class="badge bg-dark opacity-75">ID {{ updateData.locationId }}</span>
         </div>
         <div class="card-body p-4">
           <form (ngSubmit)="updateLocation()" #updateForm="ngForm">
 
             <div class="mb-3">
-              <label class="form-label fw-medium">Location ID <span class="text-danger">*</span></label>
-              <input type="number" class="form-control" placeholder="ID to update" min="1"
-                [(ngModel)]="updateData.locationId" name="locationId" required />
-            </div>
-
-            <div class="mb-3">
               <label class="form-label fw-medium">Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" placeholder="Updated name"
+              <input type="text" class="form-control"
                 [(ngModel)]="updateData.name" name="name" required />
             </div>
 
@@ -229,51 +224,82 @@
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-medium">Parent Location ID <span class="text-muted small">(optional)</span></label>
-              <input type="number" class="form-control" placeholder="Leave empty if none"
+              <label class="form-label fw-medium">
+                Parent Location
+                <span class="text-muted small fw-normal">(optional)</span>
+              </label>
+              <input type="number" class="form-control"
                 [(ngModel)]="updateData.parentLocationId" name="parentLocationId" />
             </div>
 
-            <div class="mb-4 d-flex align-items-center gap-2">
+            <div class="mb-4 form-check">
               <input type="checkbox" class="form-check-input" id="statusUpdate"
                 [(ngModel)]="updateData.statusId" name="statusId" />
               <label class="form-check-label fw-medium" for="statusUpdate">Active</label>
             </div>
 
-            <button type="submit" class="btn btn-warning w-100 fw-semibold" [disabled]="isLoading()">
-              @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-              Update Location
-            </button>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-warning flex-fill fw-semibold" [disabled]="isLoading()">
+                @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                Save Changes
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">
+                Cancel
+              </button>
+            </div>
 
           </form>
         </div>
       </div>
     }
 
-    <!-- ── DELETE ────────────────────────────────────────────── -->
-    @if (activeTab() === 'delete') {
-      <div class="card shadow-sm border-0" style="max-width: 520px;">
-        <div class="card-header bg-danger text-white py-3">
-          <span class="fw-semibold">🗑 Delete Location</span>
-        </div>
-        <div class="card-body p-4">
-
-          <div class="alert alert-warning d-flex gap-2 py-2 small mb-4">
-            ⚠️ This action is irreversible. Make sure the location has no dependencies.
-          </div>
-
-          <div class="d-flex gap-2">
-            <input type="number" class="form-control" placeholder="Enter Location ID to delete" min="1"
-              [ngModel]="deleteId()" (ngModelChange)="deleteId.set($event)" name="deleteId" />
-            <button class="btn btn-danger px-4" (click)="deleteLocation()" [disabled]="isLoading()">
-              @if (isLoading()) { <span class="spinner-border spinner-border-sm"></span> }
-              @else { Delete }
-            </button>
-          </div>
-
-        </div>
-      </div>
-    }
-
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════
+     DELETE CONFIRMATION MODAL
+════════════════════════════════════════════════════ -->
+@if (pendingDelete()) {
+  <!-- Backdrop -->
+  <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
+
+  <!-- Modal -->
+  <div class="modal d-block" style="z-index: 1050;" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+
+        <div class="modal-header border-0 pb-0">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-3">🗑</span>
+            <h5 class="modal-title fw-bold text-danger mb-0">Confirm Delete</h5>
+          </div>
+        </div>
+
+        <div class="modal-body py-3">
+          <p class="mb-1">You are about to delete:</p>
+          <div class="bg-light rounded p-3 mb-3">
+            <p class="mb-1"><span class="text-muted small">NAME</span><br><strong>{{ pendingDelete()!.name }}</strong></p>
+            <p class="mb-0"><span class="text-muted small">ID</span><br><strong>{{ pendingDelete()!.locationId }}</strong></p>
+          </div>
+          <div class="alert alert-warning py-2 small mb-0 d-flex gap-2">
+            ⚠️ This cannot be undone. If this location has dependencies (bins, inventory, etc.) the deletion will be blocked.
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 pt-0 gap-2">
+          <button class="btn btn-outline-secondary" (click)="cancelDelete()" [disabled]="isDeleting()">
+            Cancel
+          </button>
+          <button class="btn btn-danger px-4" (click)="executeDelete()" [disabled]="isDeleting()">
+            @if (isDeleting()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>Deleting...
+            } @else {
+              Yes, Delete
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

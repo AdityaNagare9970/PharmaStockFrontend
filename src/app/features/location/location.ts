@@ -1,10 +1,11 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { LocationService } from '../../core/services/location.service';
-import { Location, CreateLocation, UpdateLocation } from '../../core/models/location.model';
+import { Location, LocationType, CreateLocation, UpdateLocation } from '../../core/models/location.model';
+import { finalize } from 'rxjs';
 
-type ActiveTab = 'list' | 'add' | 'getById' | 'update' | 'delete';
+type ActiveView = 'list' | 'add' | 'update';
 
 @Component({
   selector: 'app-location',
@@ -12,35 +13,56 @@ type ActiveTab = 'list' | 'add' | 'getById' | 'update' | 'delete';
   templateUrl: './location.html',
   styleUrl: './location.css'
 })
-export class LocationComponent {
-  activeTab = signal<ActiveTab>('list');
+export class LocationComponent implements OnInit {
 
-  // List
-  locations = signal<Location[]>([]);
+  activeView = signal<ActiveView>('list');
 
-  // Get By ID
-  searchId = signal(0);
-  foundLocation = signal<Location | null>(null);
+  locations    = signal<Location[]>([]);
+  locationTypes = signal<LocationType[]>([]);
 
-  // Add
-  newLocation: CreateLocation = { name: '', locationTypeId: 1, parentLocationId: null, statusId: true };
+  searchQuery = signal('');
 
-  // Update
-  updateData: UpdateLocation = { locationId: 0, name: '', locationTypeId: 1, parentLocationId: null, statusId: true };
+  filteredLocations = computed(() => {
+    const q = this.searchQuery().toLowerCase().trim();
+    if (!q) return this.locations();
+    return this.locations().filter(l =>
+      l.name.toLowerCase().includes(q) ||
+      l.locationId.toString() === q
+    );
+  });
 
-  // Delete
-  deleteId = signal(0);
+  // Add form
+  newLocation: CreateLocation = { name: '', locationTypeId: 0, parentLocationId: null, statusId: true };
+
+  // Update form (pre-filled from row click)
+  updateData: UpdateLocation = { locationId: 0, name: '', locationTypeId: 0, parentLocationId: null, statusId: true };
+
+  // Delete confirmation
+  pendingDelete = signal<Location | null>(null);
 
   // Feedback
   successMessage = signal('');
-  errorMessage = signal('');
-  isLoading = signal(false);
+  errorMessage   = signal('');
+  isLoading      = signal(false);
+  isDeleting     = signal(false);
 
   constructor(private locationService: LocationService) {}
 
-  setTab(tab: ActiveTab) {
-    this.activeTab.set(tab);
-    this.clearMessages();
+  ngOnInit() {
+    this.loadAll();
+    this.locationService.getTypes().subscribe(types => this.locationTypes.set(types));
+  }
+
+  // ── Helpers ──────────────────────────────────────────
+
+  getTypeName(typeId: number): string {
+    const match = this.locationTypes().find(t => t.locationTypeId === typeId);
+    return match ? match.typeName : `Type ${typeId}`;
+  }
+
+  getParentName(parentId: number | null): string {
+    if (!parentId) return '—';
+    return this.locations().find(l => l.locationId === parentId)?.name ?? `ID ${parentId}`;
   }
 
   clearMessages() {
@@ -48,91 +70,94 @@ export class LocationComponent {
     this.errorMessage.set('');
   }
 
-  // ── Get All ──────────────────────────────────────────
+  setView(view: ActiveView) {
+    this.activeView.set(view);
+    this.clearMessages();
+  }
+
+  // ── Load All ─────────────────────────────────────────
+
   loadAll() {
     this.isLoading.set(true);
     this.clearMessages();
-    this.locationService.getAll().subscribe({
-      next: (data) => {
-        this.locations.set(data);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message ?? 'Failed to fetch locations.');
-        this.isLoading.set(false);
-      }
-    });
-  }
-
-  // ── Get By ID ────────────────────────────────────────
-  searchById() {
-    if (!this.searchId()) { this.errorMessage.set('Please enter a valid ID.'); return; }
-    this.isLoading.set(true);
-    this.clearMessages();
-    this.locationService.getById(this.searchId()).subscribe({
-      next: (data) => {
-        this.foundLocation.set(data);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.foundLocation.set(null);
-        this.errorMessage.set(err.error?.message ?? 'Location not found.');
-        this.isLoading.set(false);
-      }
-    });
+    this.locationService.getAll()
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next:  (data) => this.locations.set(data),
+        error: (err)  => this.errorMessage.set(err.error?.message ?? 'Failed to fetch locations.')
+      });
   }
 
   // ── Add ──────────────────────────────────────────────
+
   addLocation() {
     if (!this.newLocation.name.trim()) { this.errorMessage.set('Name is required.'); return; }
     this.isLoading.set(true);
     this.clearMessages();
-    this.locationService.create(this.newLocation).subscribe({
-      next: () => {
-        this.successMessage.set('Location created successfully!');
-        this.newLocation = { name: '', locationTypeId: 1, parentLocationId: null, statusId: true };
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message ?? 'Failed to create location.');
-        this.isLoading.set(false);
-      }
-    });
+    this.locationService.create(this.newLocation)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: () => {
+          this.successMessage.set('Location created successfully!');
+          this.newLocation = { name: '', locationTypeId: 0, parentLocationId: null, statusId: true };
+          this.loadAll();
+          this.setView('list');
+        },
+        error: (err) => this.errorMessage.set(err.error?.message ?? 'Failed to create location.')
+      });
   }
 
-  // ── Update ───────────────────────────────────────────
+  // ── Inline Update ────────────────────────────────────
+
+  openUpdate(loc: Location) {
+    this.updateData = { ...loc };
+    this.setView('update');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   updateLocation() {
-    if (!this.updateData.locationId) { this.errorMessage.set('Location ID is required.'); return; }
     if (!this.updateData.name.trim()) { this.errorMessage.set('Name is required.'); return; }
     this.isLoading.set(true);
     this.clearMessages();
-    this.locationService.update(this.updateData.locationId, this.updateData).subscribe({
-      next: () => {
-        this.successMessage.set('Location updated successfully!');
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message ?? 'Failed to update location.');
-        this.isLoading.set(false);
-      }
-    });
+    this.locationService.update(this.updateData.locationId, this.updateData)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: () => {
+          this.successMessage.set('Location updated successfully!');
+          this.loadAll();
+          this.setView('list');
+        },
+        error: (err) => this.errorMessage.set(err.error?.message ?? 'Failed to update location.')
+      });
   }
 
-  // ── Delete ───────────────────────────────────────────
-  deleteLocation() {
-    if (!this.deleteId()) { this.errorMessage.set('Please enter a valid ID.'); return; }
-    this.isLoading.set(true);
+  // ── Delete with Confirmation ──────────────────────────
+
+  confirmDelete(loc: Location) {
+    this.pendingDelete.set(loc);
     this.clearMessages();
-    this.locationService.delete(this.deleteId()).subscribe({
-      next: () => {
-        this.successMessage.set(`Location ${this.deleteId()} deleted successfully!`);
-        this.deleteId.set(0);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message ?? 'Failed to delete location.');
-        this.isLoading.set(false);
-      }
-    });
+  }
+
+  cancelDelete() {
+    this.pendingDelete.set(null);
+  }
+
+  executeDelete() {
+    const loc = this.pendingDelete();
+    if (!loc) return;
+    this.isDeleting.set(true);
+    this.locationService.delete(loc.locationId)
+      .pipe(finalize(() => this.isDeleting.set(false)))
+      .subscribe({
+        next: () => {
+          this.pendingDelete.set(null);
+          this.successMessage.set(`"${loc.name}" was deleted successfully.`);
+          this.loadAll();
+        },
+        error: (err) => {
+          this.pendingDelete.set(null);
+          this.errorMessage.set(err.error?.message ?? `Cannot delete "${loc.name}". It may have dependencies.`);
+        }
+      });
   }
 }
