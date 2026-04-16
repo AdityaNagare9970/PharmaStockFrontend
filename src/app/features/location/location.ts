@@ -6,6 +6,7 @@ import { Location, LocationTypeEnum, CreateLocation, UpdateLocation } from '../.
 import { finalize } from 'rxjs';
 
 type ActiveView = 'list' | 'add' | 'update';
+type StatusFilter = 'all' | 'active' | 'inactive';
 
 @Component({
   selector: 'app-location',
@@ -16,29 +17,69 @@ type ActiveView = 'list' | 'add' | 'update';
 export class LocationComponent implements OnInit {
 
   activeView = signal<ActiveView>('list');
+  locations  = signal<Location[]>([]);
 
-  locations = signal<Location[]>([]);
-  searchQuery = signal('');
+  // ── Filter signals ────────────────────────────────────
+  searchQuery  = signal('');
+  filterType   = signal<number | ''>('');
+  filterStatus = signal<StatusFilter>('all');
+  filterParent = signal<number | 'none' | ''>('');
 
+  // ── Enum entries exposed to template ─────────────────
+  readonly locationTypeEntries = Object.entries(LocationTypeEnum)
+    .filter(([, v]) => typeof v === 'number')
+    .map(([name, id]) => ({ id: id as number, name }));
+
+  // ── Parent options (top-level locations only for parent select) ──
+  parentOptions = computed(() =>
+    this.locations().filter(l => !l.parentLocationId)
+  );
+
+  // ── Filtered result ───────────────────────────────────
   filteredLocations = computed(() => {
+    let result = this.locations();
+
     const q = this.searchQuery().toLowerCase().trim();
-    if (!q) return this.locations();
-    return this.locations().filter(l =>
-      l.name.toLowerCase().includes(q) ||
-      l.locationId.toString() === q
-    );
+    if (q) {
+      result = result.filter(l =>
+        l.name.toLowerCase().includes(q) ||
+        l.locationId.toString() === q
+      );
+    }
+
+    const type = this.filterType();
+    if (type !== '') {
+      result = result.filter(l => l.locationTypeId === type);
+    }
+
+    const status = this.filterStatus();
+    if (status === 'active')   result = result.filter(l =>  l.statusId);
+    if (status === 'inactive') result = result.filter(l => !l.statusId);
+
+    const parent = this.filterParent();
+    if (parent === 'none') result = result.filter(l => !l.parentLocationId);
+    else if (parent !== '') result = result.filter(l => l.parentLocationId === parent);
+
+    return result;
   });
 
-  // Add form
+  hasActiveFilters = computed(() =>
+    this.searchQuery() !== '' ||
+    this.filterType()   !== '' ||
+    this.filterStatus() !== 'all' ||
+    this.filterParent() !== ''
+  );
+
+  // ── Add form ──────────────────────────────────────────
   newLocation: CreateLocation = { name: '', locationTypeId: 0, parentLocationId: null, statusId: true };
 
-  // Update form (pre-filled from row click)
+  // ── Update form (pre-filled from row click) ───────────
   updateData: UpdateLocation = { locationId: 0, name: '', locationTypeId: 0, parentLocationId: null, statusId: true };
 
-  // Delete confirmation
+  // ── Delete confirmation ───────────────────────────────
   pendingDelete = signal<Location | null>(null);
 
-  // Feedback
+  // ── Feedback ──────────────────────────────────────────
   successMessage = signal('');
   errorMessage   = signal('');
   isLoading      = signal(false);
@@ -59,6 +100,13 @@ export class LocationComponent implements OnInit {
   getParentName(parentId: number | null): string {
     if (!parentId) return '—';
     return this.locations().find(l => l.locationId === parentId)?.name ?? `ID ${parentId}`;
+  }
+
+  clearFilters() {
+    this.searchQuery.set('');
+    this.filterType.set('');
+    this.filterStatus.set('all');
+    this.filterParent.set('');
   }
 
   clearMessages() {
@@ -87,7 +135,8 @@ export class LocationComponent implements OnInit {
   // ── Add ──────────────────────────────────────────────
 
   addLocation() {
-    if (!this.newLocation.name.trim()) { this.errorMessage.set('Name is required.'); return; }
+    if (!this.newLocation.name.trim())      { this.errorMessage.set('Name is required.'); return; }
+    if (!this.newLocation.locationTypeId)   { this.errorMessage.set('Location type is required.'); return; }
     this.isLoading.set(true);
     this.clearMessages();
     this.locationService.create(this.newLocation)
@@ -112,7 +161,8 @@ export class LocationComponent implements OnInit {
   }
 
   updateLocation() {
-    if (!this.updateData.name.trim()) { this.errorMessage.set('Name is required.'); return; }
+    if (!this.updateData.name.trim())    { this.errorMessage.set('Name is required.'); return; }
+    if (!this.updateData.locationTypeId) { this.errorMessage.set('Location type is required.'); return; }
     this.isLoading.set(true);
     this.clearMessages();
     this.locationService.update(this.updateData.locationId, this.updateData)

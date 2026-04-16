@@ -48,36 +48,94 @@
     ═══════════════════════════════════════════════════ -->
     @if (activeView() === 'list') {
 
-      <!-- Search Bar -->
-      <div class="mb-3" style="max-width: 420px;">
-        <div class="input-group">
-          <span class="input-group-text bg-white">🔍</span>
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Search by name or ID..."
-            [ngModel]="searchQuery()"
-            (ngModelChange)="searchQuery.set($event)"
-            name="search"
-          />
-          @if (searchQuery()) {
-            <button class="btn btn-outline-secondary" type="button" (click)="searchQuery.set('')">✕</button>
-          }
+      <!-- ── Search & Filter Bar ── -->
+      <div class="card border-0 shadow-sm mb-3 p-3">
+        <div class="row g-2 align-items-end">
+
+          <!-- Text Search -->
+          <div class="col-12 col-md-4">
+            <label class="form-label small fw-medium text-muted mb-1">🔍 Search</label>
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="Name or ID..."
+                [ngModel]="searchQuery()"
+                (ngModelChange)="searchQuery.set($event)"
+                name="search"
+              />
+              @if (searchQuery()) {
+                <button class="btn btn-outline-secondary btn-sm" type="button"
+                  (click)="searchQuery.set('')">✕</button>
+              }
+            </div>
+          </div>
+
+          <!-- Type Filter -->
+          <div class="col-6 col-md-2">
+            <label class="form-label small fw-medium text-muted mb-1">📋 Type</label>
+            <select class="form-select form-select-sm"
+              [ngModel]="filterType()"
+              (ngModelChange)="filterType.set($event === '' ? '' : +$event)"
+              name="filterType">
+              <option value="">All Types</option>
+              @for (entry of locationTypeEntries; track entry.id) {
+                <option [value]="entry.id">{{ entry.name }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="col-6 col-md-2">
+            <label class="form-label small fw-medium text-muted mb-1">🔘 Status</label>
+            <select class="form-select form-select-sm"
+              [ngModel]="filterStatus()"
+              (ngModelChange)="filterStatus.set($event)"
+              name="filterStatus">
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+          <!-- Parent Filter -->
+          <div class="col-6 col-md-2">
+            <label class="form-label small fw-medium text-muted mb-1">🔗 Parent</label>
+            <select class="form-select form-select-sm"
+              [ngModel]="filterParent()"
+              (ngModelChange)="filterParent.set($event === '' ? '' : $event === 'none' ? 'none' : +$event)"
+              name="filterParent">
+              <option value="">All</option>
+              <option value="none">Top-level only</option>
+              @for (loc of parentOptions(); track loc.locationId) {
+                <option [value]="loc.locationId">{{ loc.name }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Clear Filters -->
+          <div class="col-6 col-md-2 d-flex align-items-end">
+            @if (hasActiveFilters()) {
+              <button class="btn btn-outline-secondary btn-sm w-100" (click)="clearFilters()">
+                ✕ Clear Filters
+              </button>
+            }
+          </div>
+
         </div>
       </div>
 
+      <!-- ── Table ── -->
       <div class="card shadow-sm border-0">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
           <span class="fw-semibold">
             All Locations
-            @if (searchQuery()) {
+            @if (hasActiveFilters()) {
               <span class="badge bg-white text-primary ms-2">{{ filteredLocations().length }} result(s)</span>
             }
           </span>
           <button class="btn btn-light btn-sm" (click)="loadAll()" [disabled]="isLoading()">
-            @if (isLoading()) {
-              <span class="spinner-border spinner-border-sm me-1"></span>
-            }
+            @if (isLoading()) { <span class="spinner-border spinner-border-sm me-1"></span> }
             Refresh
           </button>
         </div>
@@ -91,7 +149,10 @@
           } @else if (filteredLocations().length === 0) {
             <div class="text-center py-5 text-muted">
               <p class="fs-4 mb-1">📭</p>
-              <p class="small">{{ searchQuery() ? 'No locations match your search.' : 'No locations found.' }}</p>
+              <p class="small">{{ hasActiveFilters() ? 'No locations match your filters.' : 'No locations found.' }}</p>
+              @if (hasActiveFilters()) {
+                <button class="btn btn-sm btn-outline-secondary mt-1" (click)="clearFilters()">Clear Filters</button>
+              }
             </div>
           } @else {
             <div class="table-responsive">
@@ -122,18 +183,10 @@
                       </td>
                       <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
-                          <button
-                            class="btn btn-sm btn-outline-warning fw-medium"
-                            style="min-width: 72px;"
-                            (click)="openUpdate(loc)">
-                            ✏️ Edit
-                          </button>
-                          <button
-                            class="btn btn-sm btn-outline-danger fw-medium"
-                            style="min-width: 72px;"
-                            (click)="confirmDelete(loc)">
-                            🗑 Delete
-                          </button>
+                          <button class="btn btn-sm btn-outline-warning fw-medium" style="min-width: 72px;"
+                            (click)="openUpdate(loc)">✏️ Edit</button>
+                          <button class="btn btn-sm btn-outline-danger fw-medium" style="min-width: 72px;"
+                            (click)="confirmDelete(loc)">🗑 Delete</button>
                         </div>
                       </td>
                     </tr>
@@ -164,18 +217,25 @@
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-medium">Location Type ID <span class="text-danger">*</span></label>
-              <input type="number" class="form-control" min="1"
-                [(ngModel)]="newLocation.locationTypeId" name="locationTypeId" required />
+              <label class="form-label fw-medium">Location Type <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="newLocation.locationTypeId" name="locationTypeId" required>
+                <option [value]="0" disabled>Select a type...</option>
+                @for (entry of locationTypeEntries; track entry.id) {
+                  <option [value]="entry.id">{{ entry.name }}</option>
+                }
+              </select>
             </div>
 
             <div class="mb-3">
               <label class="form-label fw-medium">
-                Parent Location
-                <span class="text-muted small fw-normal">(optional)</span>
+                Parent Location <span class="text-muted small fw-normal">(optional)</span>
               </label>
-              <input type="number" class="form-control" placeholder="Leave empty if none"
-                [(ngModel)]="newLocation.parentLocationId" name="parentLocationId" />
+              <select class="form-select" [(ngModel)]="newLocation.parentLocationId" name="parentLocationId">
+                <option [value]="null">None (Top-level)</option>
+                @for (loc of locations(); track loc.locationId) {
+                  <option [value]="loc.locationId">{{ loc.name }}</option>
+                }
+              </select>
             </div>
 
             <div class="mb-4 form-check">
@@ -189,9 +249,7 @@
                 @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
                 Create Location
               </button>
-              <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">
-                Cancel
-              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">Cancel</button>
             </div>
 
           </form>
@@ -200,12 +258,12 @@
     }
 
     <!-- ══════════════════════════════════════════════════
-         UPDATE VIEW  (pre-filled from row click)
+         UPDATE VIEW
     ═══════════════════════════════════════════════════ -->
     @if (activeView() === 'update') {
       <div class="card shadow-sm border-0" style="max-width: 520px;">
         <div class="card-header bg-warning py-3 d-flex align-items-center justify-content-between">
-          <span class="fw-semibold">✏️ Update Location — <span class="text-dark opacity-75">{{ updateData.name }}</span></span>
+          <span class="fw-semibold">✏️ Update — <span class="text-dark opacity-75">{{ updateData.name }}</span></span>
           <span class="badge bg-dark opacity-75">ID {{ updateData.locationId }}</span>
         </div>
         <div class="card-body p-4">
@@ -218,18 +276,26 @@
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-medium">Location Type ID <span class="text-danger">*</span></label>
-              <input type="number" class="form-control" min="1"
-                [(ngModel)]="updateData.locationTypeId" name="locationTypeId" required />
+              <label class="form-label fw-medium">Location Type <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="updateData.locationTypeId" name="locationTypeId" required>
+                @for (entry of locationTypeEntries; track entry.id) {
+                  <option [value]="entry.id">{{ entry.name }}</option>
+                }
+              </select>
             </div>
 
             <div class="mb-3">
               <label class="form-label fw-medium">
-                Parent Location
-                <span class="text-muted small fw-normal">(optional)</span>
+                Parent Location <span class="text-muted small fw-normal">(optional)</span>
               </label>
-              <input type="number" class="form-control"
-                [(ngModel)]="updateData.parentLocationId" name="parentLocationId" />
+              <select class="form-select" [(ngModel)]="updateData.parentLocationId" name="parentLocationId">
+                <option [value]="null">None (Top-level)</option>
+                @for (loc of locations(); track loc.locationId) {
+                  @if (loc.locationId !== updateData.locationId) {
+                    <option [value]="loc.locationId">{{ loc.name }}</option>
+                  }
+                }
+              </select>
             </div>
 
             <div class="mb-4 form-check">
@@ -243,9 +309,7 @@
                 @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
                 Save Changes
               </button>
-              <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">
-                Cancel
-              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">Cancel</button>
             </div>
 
           </form>
@@ -260,21 +324,16 @@
      DELETE CONFIRMATION MODAL
 ════════════════════════════════════════════════════ -->
 @if (pendingDelete()) {
-  <!-- Backdrop -->
   <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
-
-  <!-- Modal -->
   <div class="modal d-block" style="z-index: 1050;" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg">
-
         <div class="modal-header border-0 pb-0">
           <div class="d-flex align-items-center gap-2">
             <span class="fs-3">🗑</span>
             <h5 class="modal-title fw-bold text-danger mb-0">Confirm Delete</h5>
           </div>
         </div>
-
         <div class="modal-body py-3">
           <p class="mb-1">You are about to delete:</p>
           <div class="bg-light rounded p-3 mb-3">
@@ -285,20 +344,14 @@
             ⚠️ This cannot be undone. If this location has dependencies (bins, inventory, etc.) the deletion will be blocked.
           </div>
         </div>
-
         <div class="modal-footer border-0 pt-0 gap-2">
-          <button class="btn btn-outline-secondary" (click)="cancelDelete()" [disabled]="isDeleting()">
-            Cancel
-          </button>
+          <button class="btn btn-outline-secondary" (click)="cancelDelete()" [disabled]="isDeleting()">Cancel</button>
           <button class="btn btn-danger px-4" (click)="executeDelete()" [disabled]="isDeleting()">
             @if (isDeleting()) {
               <span class="spinner-border spinner-border-sm me-2"></span>Deleting...
-            } @else {
-              Yes, Delete
-            }
+            } @else { Yes, Delete }
           </button>
         </div>
-
       </div>
     </div>
   </div>
