@@ -370,6 +370,7 @@ export class ReplenishmentComponent implements OnInit {
       : this.rules()
   );
 
+  
   // Auto-suggest qty from selected rule's par level
   parLevelHint = computed(() => {
     const rule = this.rules().find((r) => r.replenishmentRuleId === this.newRuleId());
