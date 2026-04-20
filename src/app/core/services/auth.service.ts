@@ -1,65 +1,30 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { tap } from 'rxjs';
+import { map } from 'rxjs';
 import { LoginRequest, LoginResponse } from '../models/auth.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:5259/api';
+  private apiUrl = 'http://localhost:5259/api/login';
 
-  isLoggedIn = signal<boolean>(this.hasToken());
-  userRole = signal<string>(localStorage.getItem('role') ?? '');
-
-  // Accepts any casing / spacing variant: "InventoryController", "Inventory Controller", etc.
-  isInventoryController = computed(() => {
-    const role = this.userRole().toLowerCase().replace(/\s+/g, '');
-    return role === 'inventorycontroller' || role === 'inventory_controller';
-  });
-
-  constructor(private http: HttpClient, private router: Router) {}
-
-  private hasToken(): boolean {
-    return !!localStorage.getItem('token');
-  }
-
-  /** Decode a JWT and return its payload as an object */
-  private decodeJwt(token: string): Record<string, unknown> {
-    try {
-      const payload = token.split('.')[1];
-      return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
-    } catch {
-      return {};
-    }
-  }
+  constructor(private http: HttpClient) {}
 
   login(credentials: LoginRequest) {
-    return this.http.post<LoginResponse>(`${this.API_URL}/login`, credentials).pipe(
-      tap((response) => {
-        // Prefer role from the JWT payload (more reliable than response body field name)
-        const payload = this.decodeJwt(response.token);
-        const roleFromJwt =
-          (payload['role'] as string) ||
-          (payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] as string) ||
-          response.role ||
-          '';
-
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('role', roleFromJwt);
-        localStorage.setItem('userId', response.userId?.toString() ?? '');
-        this.isLoggedIn.set(true);
-        this.userRole.set(roleFromJwt);
-      })
+    return this.http.post<any>(this.apiUrl, credentials).pipe(
+      map((res): LoginResponse => ({
+        token:  res.token  ?? res.Token  ?? '',
+        userId: res.userId ?? res.UserId ?? 0,
+        role:   res.role   ?? res.Role   ?? '',
+      }))
     );
   }
 
-  logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('userId');
-    this.isLoggedIn.set(false);
-    this.userRole.set('');
-    this.router.navigate(['/login']);
+  saveToken(token: string) {
+    localStorage.setItem('token', token);
+  }
+
+  saveRole(role: string) {
+    localStorage.setItem('role', role.toLowerCase());
   }
 
   getToken(): string | null {
@@ -67,10 +32,57 @@ export class AuthService {
   }
 
   getRole(): string {
-    return localStorage.getItem('role') ?? '';
+    // 1. Check localStorage first
+    const stored = localStorage.getItem('role');
+    if (stored) return stored;
+
+    // 2. Fall back: decode role from JWT payload
+    const token = this.getToken();
+    if (!token) return '';
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+
+      // .NET JWT standard role claim
+      const role =
+        payload['role'] ??
+        payload['roles'] ??
+        payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ??
+        '';
+
+      const resolved = Array.isArray(role) ? role[0] : role;
+      if (resolved) {
+        // Cache it so future calls don't re-decode
+        this.saveRole(resolved);
+      }
+      return (resolved as string).toLowerCase();
+    } catch {
+      return '';
+    }
   }
 
-  getUserId(): number {
-    return parseInt(localStorage.getItem('userId') ?? '0', 10);
+  hasRole(...roles: string[]): boolean {
+    const current = this.getRole();
+    return roles.map(r => r.toLowerCase()).includes(current);
+  }
+
+  isLoggedIn(): boolean {
+    return !!this.getToken();
+  }
+
+  getRole(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.role ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
   }
 }

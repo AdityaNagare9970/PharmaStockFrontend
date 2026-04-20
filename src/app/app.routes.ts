@@ -4,196 +4,96 @@ import { icAuthGuard } from './core/guards/ic-auth.guard';
 import { qcoAuthGuard } from './core/guards/qco-auth.guard';
 import { pharmacistAuthGuard } from './core/guards/pharmacist-auth.guard';
 
+import { Login } from './features/auth/login/login';
+import { Dashboard } from './features/dashboard/dashboard';
+import { VendorComponent } from './features/vendor/vendor';
+import { PurchaseOrderComponent } from './features/purchase-order/purchase-order';
+import { PurchaseItemComponent } from './features/purchase-item/purchase-item';
+import { Shell } from './features/shell/shell';
+import { authGuard } from './core/guards/auth.guard';
+
+import { AdminLayout } from './features/admin/admin-layout';
+import { AdminDashboard } from './features/admin/admin-dashboard';
+import { ProcurementDashboard } from './features/procurement/procurement-dashboard';
+import { InventoryDashboard } from './features/inventory/inventory-dashboard';
+import { QualityDashboard } from './features/quality/quality-dashboard';
+import { PharmacistDashboard } from './features/pharmacist/pharmacist-dashboard';
+
+import { LocationComponent } from './features/location/location';
+import { UserComponent } from './features/user/user';
+import { BinComponent } from './features/bin/bin';
+import { DrugComponent } from './features/drug/drug';
+import { ItemComponent } from './features/item/item';
+import { AuditComponent } from './features/audit/audit';
+
+import { roleGuard } from './core/guards/role.guard';
+
 export const routes: Routes = [
-  // Default → unified login
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
 
-  // ─── Unified Login ────────────────────────────────────────────────────────
+  // Auth
+  { path: 'auth/login', component: Login },
   {
-    path: 'login',
-    loadComponent: () =>
-      import('./features/auth/unified-login/unified-login').then(
-        (m) => m.UnifiedLoginComponent
-      ),
-  },
-
-  // Keep IC-specific login as alias (backward compat)
-  {
-    path: 'ic/login',
-    redirectTo: 'login',
-    pathMatch: 'full',
-  },
-
-  // ─── Admin routes (existing — untouched) ─────────────────────────────────
-  {
-    path: 'dashboard',
-    loadComponent: () =>
-      import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
+    path: '',
+    component: Shell,
     canActivate: [authGuard],
-  },
-  {
-    path: 'drugs',
-    loadComponent: () =>
-      import('./features/drugs/drug-list/drug-list').then((m) => m.DrugListComponent),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'drugs/add',
-    loadComponent: () =>
-      import('./features/drugs/drug-form/drug-form').then((m) => m.DrugFormComponent),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'drugs/edit/:id',
-    loadComponent: () =>
-      import('./features/drugs/drug-form/drug-form').then((m) => m.DrugFormComponent),
-    canActivate: [authGuard],
-  },
-
-  // ─── Inventory Controller ─────────────────────────────────────────────────
-  {
-    path: 'ic',
-    loadComponent: () =>
-      import('./features/inventory-controller/ic-layout/ic-layout').then(
-        (m) => m.IcLayoutComponent
-      ),
-    canActivate: [icAuthGuard],
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'dashboard',
-        loadComponent: () =>
-          import('./features/inventory-controller/dashboard/ic-dashboard').then(
-            (m) => m.IcDashboardComponent
-          ),
+        component: Dashboard,
       },
       {
-        path: 'inventory-lots',
-        loadComponent: () =>
-          import('./features/inventory-controller/inventory-lots/inventory-lots').then(
-            (m) => m.InventoryLotsComponent
-          ),
+        path: 'vendors',
+        component: VendorComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'procurementofficer'] },
       },
       {
-        path: 'expiry-watch',
-        loadComponent: () =>
-          import('./features/inventory-controller/expiry-watch/expiry-watch').then(
-            (m) => m.ExpiryWatchComponent
-          ),
+        path: 'purchase-orders',
+        component: PurchaseOrderComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'procurementofficer'] },
       },
       {
-        path: 'transfer-orders',
-        loadComponent: () =>
-          import('./features/inventory-controller/transfer-orders/transfer-orders').then(
-            (m) => m.TransferOrdersComponent
-          ),
+        path: 'purchase-items',
+        component: PurchaseItemComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'procurementofficer'] },
       },
-      {
-        path: 'replenishment',
-        loadComponent: () =>
-          import('./features/inventory-controller/replenishment/replenishment').then(
-            (m) => m.ReplenishmentComponent
-          ),
-      },
-    ],
-  },
-
-  // ─── Quality & Compliance Officer ─────────────────────────────────────────
-  {
-    path: 'qco',
-    loadComponent: () =>
-      import('./features/quality-compliance/qco-layout/qco-layout').then(
-        (m) => m.QcoLayoutComponent
-      ),
-    canActivate: [qcoAuthGuard],
-    children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./features/quality-compliance/dashboard/qco-dashboard').then(
-            (m) => m.QcoDashboardComponent
-          ),
-      },
-      {
-        path: 'quarantine',
-        loadComponent: () =>
-          import('./features/quality-compliance/quarantine/quarantine').then(
-            (m) => m.QuarantineComponent
-          ),
-      },
-      {
-        path: 'recalls',
-        loadComponent: () =>
-          import('./features/quality-compliance/recalls/recalls').then(
-            (m) => m.RecallsComponent
-          ),
-      },
-      {
-        path: 'adjustments',
-        loadComponent: () =>
-          import('./features/quality-compliance/adjustments/adjustments').then(
-            (m) => m.AdjustmentsComponent
-          ),
-      },
-      {
-        path: 'expiry',
-        loadComponent: () =>
-          import('./features/quality-compliance/expiry/qco-expiry').then(
-            (m) => m.QcoExpiryComponent
-          ),
-      },
     ],
   },
+  { path: '**', redirectTo: 'dashboard' },
 
-  // ─── Pharmacist ───────────────────────────────────────────────────────────
+  // ── Admin (sidebar layout with nested children) ────────
   {
-    path: 'pharmacist',
-    loadComponent: () =>
-      import('./features/pharmacist/pharmacist-layout/pharmacist-layout').then(
-        (m) => m.PharmacistLayoutComponent
-      ),
-    canActivate: [pharmacistAuthGuard],
+    path: 'admin',
+    component: AdminLayout,
+    canActivate: [roleGuard('Admin')],
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./features/pharmacist/dashboard/pharmacist-dashboard').then(
-            (m) => m.PharmacistDashboardComponent
-          ),
-      },
-      {
-        path: 'stock',
-        loadComponent: () =>
-          import('./features/pharmacist/stock/pharmacist-stock').then(
-            (m) => m.PharmacistStockComponent
-          ),
-      },
-      {
-        path: 'transfers',
-        loadComponent: () =>
-          import('./features/pharmacist/transfers/incoming-transfers').then(
-            (m) => m.IncomingTransfersComponent
-          ),
-      },
-      {
-        path: 'dispense',
-        loadComponent: () =>
-          import('./features/pharmacist/dispense/pharmacist-dispense').then(
-            (m) => m.PharmacistDispenseComponent
-          ),
-      },
-      {
-        path: 'expiry',
-        loadComponent: () =>
-          import('./features/pharmacist/expiry/pharmacist-expiry').then(
-            (m) => m.PharmacistExpiryComponent
-          ),
-      },
-    ],
+      { path: '',          component: AdminDashboard   },
+      { path: 'locations', component: LocationComponent },
+      { path: 'users',     component: UserComponent     },
+      { path: 'bins',      component: BinComponent      },
+      { path: 'drugs',     component: DrugComponent     },
+      { path: 'items',     component: ItemComponent     },
+      { path: 'audit',     component: AuditComponent    },
+    ]
   },
 
-  // Wildcard
-  { path: '**', redirectTo: 'login' },
+  // ── Procurement Officer ───────────────────────────────
+  { path: 'procurement', component: ProcurementDashboard, canActivate: [roleGuard('Procurement Officer')] },
+
+  // ── Inventory Controller ──────────────────────────────
+  { path: 'inventory', component: InventoryDashboard, canActivate: [roleGuard('Inventory Controller')] },
+
+  // ── Quality Officer ───────────────────────────────────
+  { path: 'quality', component: QualityDashboard, canActivate: [roleGuard('Quality Officer')] },
+
+  // ── Pharmacist ────────────────────────────────────────
+  { path: 'pharmacist', component: PharmacistDashboard, canActivate: [roleGuard('Pharmacist')] },
+
+  // Fallback
+  { path: '',   redirectTo: 'auth/login', pathMatch: 'full' },
+  { path: '**', redirectTo: 'auth/login' }
+
 ];

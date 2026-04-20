@@ -1,44 +1,53 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import {
-  Drug,
-  CreateDrugDTO,
-  UpdateDrugDTO,
-  DrugFilterDTO,
-  PaginatedResult,
-} from '../models/drug.model';
+import { HttpClient } from '@angular/common/http';
+import { map } from 'rxjs';
+import { Drug, CreateDrug, UpdateDrug } from '../models/drug.model';
 
 @Injectable({ providedIn: 'root' })
 export class DrugService {
-  private readonly API_URL = 'http://localhost:5259/api/v1/drugs';
+  private apiUrl = 'http://localhost:5259/api/v1/drugs';
 
   constructor(private http: HttpClient) {}
 
-  getAll(filter?: DrugFilterDTO): Observable<PaginatedResult<Drug>> {
-    let params = new HttpParams();
-    if (filter?.page != null)        params = params.set('page', filter.page);
-    if (filter?.pageSize != null)    params = params.set('pageSize', filter.pageSize);
-    if (filter?.genericName)         params = params.set('genericName', filter.genericName);
-    if (filter?.storageClass != null) params = params.set('storageClass', filter.storageClass);
-    if (filter?.controlClass != null) params = params.set('controlClass', filter.controlClass);
-    if (filter?.status != null)      params = params.set('status', filter.status);
-    return this.http.get<PaginatedResult<Drug>>(this.API_URL, { params });
+  // Normalizes both PascalCase (backend default) and camelCase responses
+  private normalize(raw: any): Drug {
+    return {
+      drugId:       raw.drugId       ?? raw.DrugId       ?? 0,
+      genericName:  raw.genericName  ?? raw.GenericName  ?? '',
+      brandName:    raw.brandName    ?? raw.BrandName    ?? '',
+      strength:     raw.strength     ?? raw.Strength     ?? '',
+      form:         raw.form         ?? raw.Form         ?? 0,
+      atccode:      raw.atccode      ?? raw.Atccode      ?? '',
+      controlClass: raw.controlClass ?? raw.ControlClass ?? 0,
+      storageClass: raw.storageClass ?? raw.StorageClass ?? 0,
+      status:       raw.status       ?? raw.Status       ?? false,
+    };
   }
 
-  getById(id: number): Observable<Drug> {
-    return this.http.get<Drug>(`${this.API_URL}/${id}`);
+  getAll() {
+    return this.http.get<any>(`${this.apiUrl}?PageSize=1000`).pipe(
+      map(result => {
+        const items: any[] = result.items ?? result.Items ?? result ?? [];
+        return items.map(raw => this.normalize(raw));
+      })
+    );
   }
 
-  create(dto: CreateDrugDTO): Observable<Drug> {
-    return this.http.post<Drug>(`${this.API_URL}/CreateDrug`, dto);
+  getById(id: number) {
+    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+      map(raw => this.normalize(raw))
+    );
   }
 
-  update(id: number, dto: UpdateDrugDTO): Observable<{ message: string }> {
-    return this.http.put<{ message: string }>(`${this.API_URL}/UpdateDrug/${id}`, dto);
+  create(data: CreateDrug) {
+    return this.http.post<Drug>(`${this.apiUrl}/CreateDrug`, data);
   }
 
-  delete(id: number): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${this.API_URL}/DeleteDrug/${id}`);
+  update(drugId: number, data: UpdateDrug) {
+    return this.http.put<{ message: string }>(`${this.apiUrl}/UpdateDrug/${drugId}`, data);
+  }
+
+  delete(drugId: number) {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/DeleteDrug/${drugId}`);
   }
 }

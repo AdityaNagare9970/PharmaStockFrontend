@@ -1,0 +1,397 @@
+<div class="min-vh-100 bg-gray-50">
+
+  <!-- Header -->
+  <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center gap-2">
+    <span class="fs-5">🗃</span>
+    <h5 class="mb-0 fw-bold text-primary">Bin Management</h5>
+  </div>
+
+  <div class="container-fluid px-4 py-4">
+
+    <!-- Tab Buttons -->
+    <div class="d-flex gap-2 mb-4">
+      <button class="btn btn-sm fw-semibold tab-btn"
+        [class.btn-primary]="activeView() === 'list'"
+        [class.btn-outline-primary]="activeView() !== 'list'"
+        (click)="setView('list')">
+        🗂 All Bins
+      </button>
+      <button class="btn btn-sm fw-semibold tab-btn"
+        [class.btn-success]="activeView() === 'add'"
+        [class.btn-outline-success]="activeView() !== 'add'"
+        (click)="setView('add')">
+        ➕ Add Bin
+      </button>
+    </div>
+
+    <!-- Feedback -->
+    @if (successMessage()) {
+      <div class="alert alert-success d-flex align-items-center gap-2 py-2 mb-3">
+        ✅ {{ successMessage() }}
+      </div>
+    }
+    @if (errorMessage()) {
+      <div class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-3">
+        <span class="fs-5">❌</span>
+        <div>
+          <strong>Error</strong><br>
+          <span class="small">{{ errorMessage() }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         LIST VIEW
+    ═══════════════════════════════════════════════════ -->
+    @if (activeView() === 'list') {
+
+      <!-- ── Search & Filter Bar ── -->
+      <div class="card border-0 shadow-sm mb-3 p-3">
+        <div class="row g-2 align-items-end">
+
+          <!-- Text Search -->
+          <div class="col-12 col-md-3">
+            <label class="form-label small fw-medium text-muted mb-1">🔍 Search</label>
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="Code, location or ID..."
+                [ngModel]="searchQuery()"
+                (ngModelChange)="searchQuery.set($event)"
+                name="search"
+              />
+              @if (searchQuery()) {
+                <button class="btn btn-outline-secondary btn-sm" type="button"
+                  (click)="searchQuery.set('')">✕</button>
+              }
+            </div>
+          </div>
+
+          <!-- Location Filter -->
+          <div class="col-6 col-md-2">
+            <label class="form-label small fw-medium text-muted mb-1">📍 Location</label>
+            <select class="form-select form-select-sm"
+              [ngModel]="filterLocationId()"
+              (ngModelChange)="filterLocationId.set($event === '' ? '' : +$event)"
+              name="filterLocation">
+              <option value="">All Locations</option>
+              @for (loc of locations(); track loc.locationId) {
+                <option [value]="loc.locationId">{{ loc.name }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Storage Class Filter -->
+          <div class="col-6 col-md-2">
+            <label class="form-label small fw-medium text-muted mb-1">🏷 Storage Class</label>
+            <select class="form-select form-select-sm"
+              [ngModel]="filterStorageClassId()"
+              (ngModelChange)="filterStorageClassId.set($event === '' ? '' : +$event)"
+              name="filterStorageClass">
+              <option value="">All Classes</option>
+              @for (sc of storageClasses(); track sc.id) {
+                <option [value]="sc.id">{{ sc.name }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Quarantine Filter -->
+          <div class="col-6 col-md-2">
+            <label class="form-label small fw-medium text-muted mb-1">⚠️ Quarantine</label>
+            <select class="form-select form-select-sm"
+              [ngModel]="filterQuarantine()"
+              (ngModelChange)="filterQuarantine.set($event)"
+              name="filterQuarantine">
+              <option value="all">All</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="col-6 col-md-2">
+            <label class="form-label small fw-medium text-muted mb-1">🔘 Status</label>
+            <select class="form-select form-select-sm"
+              [ngModel]="filterStatus()"
+              (ngModelChange)="filterStatus.set($event)"
+              name="filterStatus">
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+          <!-- Clear Filters -->
+          <div class="col-12 col-md-1 d-flex align-items-end">
+            @if (hasActiveFilters()) {
+              <button class="btn btn-outline-secondary btn-sm w-100" (click)="clearFilters()">
+                ✕ Clear
+              </button>
+            }
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Table ── -->
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+          <span class="fw-semibold">
+            All Bins
+            @if (hasActiveFilters()) {
+              <span class="badge bg-white text-primary ms-2">{{ filteredBins().length }} result(s)</span>
+            }
+          </span>
+          <button class="btn btn-light btn-sm" (click)="loadAll()" [disabled]="isLoading()">
+            @if (isLoading()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Refresh
+          </button>
+        </div>
+
+        <div class="card-body p-0">
+          @if (isLoading() && bins().length === 0) {
+            <div class="text-center py-5 text-muted">
+              <div class="spinner-border text-primary mb-2"></div>
+              <p class="small">Loading bins...</p>
+            </div>
+          } @else if (filteredBins().length === 0) {
+            <div class="text-center py-5 text-muted">
+              <p class="fs-4 mb-1">📭</p>
+              <p class="small">{{ hasActiveFilters() ? 'No bins match your filters.' : 'No bins found.' }}</p>
+              @if (hasActiveFilters()) {
+                <button class="btn btn-sm btn-outline-secondary mt-1" (click)="clearFilters()">Clear Filters</button>
+              }
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-4">ID</th>
+                    <th>Code</th>
+                    <th>Location</th>
+                    <th>Storage Class</th>
+                    <th class="text-center">Quarantine</th>
+                    <th>Max Capacity</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (bin of filteredBins(); track bin.binId) {
+                    <tr>
+                      <td class="ps-4 fw-semibold text-primary">{{ bin.binId }}</td>
+                      <td class="fw-medium">{{ bin.code }}</td>
+                      <td class="text-muted small">{{ bin.locationName }}</td>
+                      <td class="text-muted small">{{ bin.storageClass }}</td>
+                      <td class="text-center">
+                        @if (bin.isQuarantine) {
+                          <span class="badge bg-warning text-dark rounded-pill">Yes</span>
+                        } @else {
+                          <span class="badge bg-light text-muted rounded-pill">No</span>
+                        }
+                      </td>
+                      <td class="text-muted small">{{ bin.maxCapacity }}</td>
+                      <td>
+                        <span class="badge rounded-pill"
+                          [class.bg-success]="bin.isActive"
+                          [class.bg-secondary]="!bin.isActive">
+                          {{ bin.isActive ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                      <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                          <button class="btn btn-sm btn-outline-warning fw-medium" style="min-width: 72px;"
+                            (click)="openUpdate(bin)">✏️ Edit</button>
+                          <button class="btn btn-sm btn-outline-danger fw-medium" style="min-width: 72px;"
+                            (click)="confirmDelete(bin)">🗑 Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         ADD VIEW
+    ═══════════════════════════════════════════════════ -->
+    @if (activeView() === 'add') {
+      <div class="card shadow-sm border-0" style="max-width: 520px;">
+        <div class="card-header bg-success text-white py-3">
+          <span class="fw-semibold">➕ Add New Bin</span>
+        </div>
+        <div class="card-body p-4">
+          <form (ngSubmit)="addBin()" #addForm="ngForm">
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Location <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="newBin.locationId" name="locationId" required>
+                <option [value]="0" disabled>Select a location...</option>
+                @for (loc of activeLocations(); track loc.locationId) {
+                  <option [value]="loc.locationId">{{ loc.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" placeholder="e.g. BIN-A01"
+                [(ngModel)]="newBin.code" name="code" required />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Storage Class <span class="text-danger">*</span></label>
+              @if (storageClasses().length > 0) {
+                <select class="form-select" [(ngModel)]="newBin.binStorageClassId" name="binStorageClassId" required>
+                  <option [value]="0" disabled>Select a storage class...</option>
+                  @for (sc of storageClasses(); track sc.id) {
+                    <option [value]="sc.id">{{ sc.name }}</option>
+                  }
+                </select>
+              } @else {
+                <input type="number" class="form-control" placeholder="Enter storage class ID"
+                  [(ngModel)]="newBin.binStorageClassId" name="binStorageClassId" min="1" required />
+                <div class="form-text text-muted">No storage classes loaded yet — enter the ID directly.</div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Max Capacity <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" placeholder="e.g. 100"
+                [(ngModel)]="newBin.maxCapacity" name="maxCapacity" min="1" required />
+            </div>
+
+            <div class="mb-4 form-check">
+              <input type="checkbox" class="form-check-input" id="quarantineAdd"
+                [(ngModel)]="newBin.isQuarantine" name="isQuarantine" />
+              <label class="form-check-label fw-medium" for="quarantineAdd">Quarantine Bin</label>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success flex-fill" [disabled]="isLoading()">
+                @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                Create Bin
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">Cancel</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         UPDATE VIEW
+    ═══════════════════════════════════════════════════ -->
+    @if (activeView() === 'update') {
+      <div class="card shadow-sm border-0" style="max-width: 520px;">
+        <div class="card-header bg-warning py-3 d-flex align-items-center justify-content-between">
+          <span class="fw-semibold">✏️ Update — <span class="text-dark opacity-75">{{ updateData.code }}</span></span>
+          <span class="badge bg-dark opacity-75">ID {{ updateData.binId }}</span>
+        </div>
+        <div class="card-body p-4">
+
+          <!-- Read-only info -->
+          <div class="bg-light rounded p-3 mb-4">
+            <p class="mb-0 small text-muted">Location: <span class="fw-medium text-dark">{{ updateData.locationName }}</span></p>
+            <p class="mb-0 small text-muted mt-1">Code: <span class="fw-medium text-dark">{{ updateData.code }}</span>
+              <span class="ms-1 badge bg-secondary bg-opacity-10 text-secondary" style="font-size: 0.7rem;">read-only</span>
+            </p>
+          </div>
+
+          <form (ngSubmit)="updateBin()" #updateForm="ngForm">
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Storage Class <span class="text-danger">*</span></label>
+              @if (storageClasses().length > 0) {
+                <select class="form-select" [(ngModel)]="updateData.binStorageClassId" name="binStorageClassId" required>
+                  @for (sc of storageClasses(); track sc.id) {
+                    <option [value]="sc.id">{{ sc.name }}</option>
+                  }
+                </select>
+              } @else {
+                <input type="number" class="form-control"
+                  [(ngModel)]="updateData.binStorageClassId" name="binStorageClassId" min="1" required />
+              }
+              <div class="form-text text-warning small">⚠️ Cannot change if bin has inventory.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Max Capacity <span class="text-danger">*</span></label>
+              <input type="number" class="form-control"
+                [(ngModel)]="updateData.maxCapacity" name="maxCapacity" min="1" required />
+            </div>
+
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="quarantineUpdate"
+                [(ngModel)]="updateData.isQuarantine" name="isQuarantine" />
+              <label class="form-check-label fw-medium" for="quarantineUpdate">Quarantine Bin</label>
+              <div class="form-text text-warning small">⚠️ Cannot remove quarantine flag if bin has stock.</div>
+            </div>
+
+            <div class="mb-4 form-check">
+              <input type="checkbox" class="form-check-input" id="activeUpdate"
+                [(ngModel)]="updateData.isActive" name="isActive" />
+              <label class="form-check-label fw-medium" for="activeUpdate">Active</label>
+              <div class="form-text text-warning small">⚠️ Cannot deactivate if bin has inventory or open tasks.</div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-warning flex-fill fw-semibold" [disabled]="isLoading()">
+                @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                Save Changes
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">Cancel</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     DELETE CONFIRMATION MODAL
+════════════════════════════════════════════════════ -->
+@if (pendingDelete()) {
+  <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
+  <div class="modal d-block" style="z-index: 1050;" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-3">🗑</span>
+            <h5 class="modal-title fw-bold text-danger mb-0">Confirm Delete</h5>
+          </div>
+        </div>
+        <div class="modal-body py-3">
+          <p class="mb-1">You are about to delete:</p>
+          <div class="bg-light rounded p-3 mb-3">
+            <p class="mb-1"><span class="text-muted small">CODE</span><br><strong>{{ pendingDelete()!.code }}</strong></p>
+            <p class="mb-1"><span class="text-muted small">LOCATION</span><br><strong>{{ pendingDelete()!.locationName }}</strong></p>
+            <p class="mb-0"><span class="text-muted small">ID</span><br><strong>{{ pendingDelete()!.binId }}</strong></p>
+          </div>
+          <div class="alert alert-warning py-2 small mb-0 d-flex gap-2">
+            ⚠️ This cannot be undone. Deletion will be blocked if the bin has inventory or open put-away tasks.
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0 gap-2">
+          <button class="btn btn-outline-secondary" (click)="cancelDelete()" [disabled]="isDeleting()">Cancel</button>
+          <button class="btn btn-danger px-4" (click)="executeDelete()" [disabled]="isDeleting()">
+            @if (isDeleting()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>Deleting...
+            } @else { Yes, Delete }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

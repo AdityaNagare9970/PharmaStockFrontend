@@ -3,47 +3,31 @@ export interface Drug {
   genericName: string;
   brandName: string;
   strength: string;
-  atccode: string;
   form: number;
-  storageClass: number;
+  atccode: string;
   controlClass: number;
+  storageClass: number;
   status: boolean;
 }
 
-export interface CreateDrugDTO {
+export interface CreateDrug {
   genericName: string;
   brandName: string;
   strength: string;
-  atccode: string;
   form: number;
-  storageClass: number;
+  atccode: string;
   controlClass: number;
+  storageClass: number;
   status: boolean;
 }
 
-export interface UpdateDrugDTO {
+export interface UpdateDrug {
   genericName: string;
   brandName: string;
   strength: string;
-  atccode: string;
   form: number;
-  storageClass: number;
+  atccode: string;
   controlClass: number;
+  storageClass: number;
   status: boolean;
-}
-
-export interface DrugFilterDTO {
-  genericName?: string;
-  storageClass?: number;
-  controlClass?: number;
-  status?: boolean;
-  page?: number;
-  pageSize?: number;
-}
-
-export interface PaginatedResult<T> {
-  items: T[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
 }
