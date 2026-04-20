@@ -9,12 +9,14 @@ import { AuthService } from '../../../core/services/auth.service';
   template: `
     <div class="flex h-screen bg-gray-50 overflow-hidden">
 
+    
       <!-- Sidebar -->
       <aside
         [class]="sidebarOpen()
           ? 'fixed inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-violet-900 to-purple-800 flex flex-col transition-transform duration-300 translate-x-0'
           : 'fixed inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-violet-900 to-purple-800 flex flex-col transition-transform duration-300 -translate-x-full lg:translate-x-0'"
       >
+
         <!-- Brand -->
         <div class="flex items-center justify-between h-16 px-5 border-b border-violet-700 shrink-0">
           <div class="flex items-center gap-2">
