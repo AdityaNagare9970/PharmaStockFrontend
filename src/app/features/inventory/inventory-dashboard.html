@@ -1,0 +1,64 @@
+<div class="min-vh-100 bg-light">
+
+  <nav class="navbar navbar-dark px-4 py-3" style="background-color: #198754;">
+    <span class="navbar-brand fw-bold fs-5">🏥 PharmaStock — <span class="opacity-75 fs-6">Inventory Controller</span></span>
+    <button class="btn btn-outline-light btn-sm" (click)="logout()">Logout</button>
+  </nav>
+
+  <div class="container py-4">
+    <h6 class="text-muted text-uppercase fw-semibold mb-3 small">Inventory Modules</h6>
+
+    <div class="row g-3">
+
+      <div class="col-sm-6 col-md-4">
+        <a routerLink="/inventory/stock" class="card border-0 shadow-sm text-decoration-none h-100 card-hover">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <span class="fs-2">📊</span>
+            <div>
+              <p class="mb-0 fw-semibold text-dark">Inventory Lots</p>
+              <p class="mb-0 text-muted small">Track stock levels</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <a routerLink="/inventory/transfer-orders" class="card border-0 shadow-sm text-decoration-none h-100 card-hover">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <span class="fs-2">🔄</span>
+            <div>
+              <p class="mb-0 fw-semibold text-dark">Transfer Orders</p>
+              <p class="mb-0 text-muted small">Move stock between locations</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <a routerLink="/inventory/stock-adjustment" class="card border-0 shadow-sm text-decoration-none h-100 card-hover">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <span class="fs-2">⚖️</span>
+            <div>
+              <p class="mb-0 fw-semibold text-dark">Stock Adjustment</p>
+              <p class="mb-0 text-muted small">Correct stock discrepancies</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <a routerLink="/inventory/stock-count" class="card border-0 shadow-sm text-decoration-none h-100 card-hover">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <span class="fs-2">🔢</span>
+            <div>
+              <p class="mb-0 fw-semibold text-dark">Stock Count</p>
+              <p class="mb-0 text-muted small">Physical inventory count</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>

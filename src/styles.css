@@ -1,3 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+.card-hover {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  cursor: pointer;
+}
+
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1) !important;
+}

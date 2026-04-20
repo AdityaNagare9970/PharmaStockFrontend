@@ -5,6 +5,14 @@ import { AuthService } from '../../../core/services/auth.service';
 import { LoginRequest } from '../../../core/models/auth.model';
 import { finalize } from 'rxjs';
 
+const ROLE_ROUTES: Record<string, string> = {
+  'Admin': '/admin',
+  'Procurement Officer': '/procurement',
+  'Inventory Controller': '/inventory',
+  'Quality Officer': '/quality',
+  'Pharmacist': '/pharmacist'
+};
+
 @Component({
   selector: 'app-login',
   imports: [FormsModule],
@@ -23,6 +31,8 @@ export class Login {
     }
   }
   
+  constructor(private authService: AuthService, private router: Router) {}
+
   onSubmit() {
     if (!this.credentials.username || !this.credentials.password) {
       this.errorMessage.set('Please enter username and password.');
@@ -39,6 +49,8 @@ export class Login {
           this.authService.saveToken(res.token);
           this.authService.saveRole(res.role);
           this.router.navigate(['/dashboard']);
+          const route = ROLE_ROUTES[res.role] ?? '/auth/login';
+          this.router.navigate([route]);
         },
         error: (err) => {
           this.errorMessage.set(err.error?.message ?? 'Login failed. Please try again.');

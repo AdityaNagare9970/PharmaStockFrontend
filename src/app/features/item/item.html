@@ -1,0 +1,357 @@
+<div class="min-vh-100 bg-gray-50">
+
+  <!-- Header -->
+  <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center gap-2">
+    <span class="fs-5">📋</span>
+    <h5 class="mb-0 fw-bold text-primary">Item Management</h5>
+  </div>
+
+  <div class="container-fluid px-4 py-4">
+
+    <!-- Tab Buttons -->
+    <div class="d-flex gap-2 mb-4">
+      <button class="btn btn-sm fw-semibold tab-btn"
+        [class.btn-primary]="activeView() === 'list'"
+        [class.btn-outline-primary]="activeView() !== 'list'"
+        (click)="setView('list')">
+        🗂 All Items
+      </button>
+      <button class="btn btn-sm fw-semibold tab-btn"
+        [class.btn-success]="activeView() === 'add'"
+        [class.btn-outline-success]="activeView() !== 'add'"
+        (click)="setView('add')">
+        ➕ Add Item
+      </button>
+    </div>
+
+    <!-- Feedback -->
+    @if (successMessage()) {
+      <div class="alert alert-success d-flex align-items-center gap-2 py-2 mb-3">
+        ✅ {{ successMessage() }}
+      </div>
+    }
+    @if (errorMessage()) {
+      <div class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-3">
+        <span class="fs-5">❌</span>
+        <div>
+          <strong>Error</strong><br>
+          <span class="small">{{ errorMessage() }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         LIST VIEW
+    ═══════════════════════════════════════════════════ -->
+    @if (activeView() === 'list') {
+
+      <!-- ── Search & Filter Bar ── -->
+      <div class="card border-0 shadow-sm mb-3 p-3">
+        <div class="row g-2 align-items-end">
+
+          <!-- Text Search -->
+          <div class="col-12 col-md-4">
+            <label class="form-label small fw-medium text-muted mb-1">🔍 Search</label>
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="Barcode, drug name or ID..."
+                [ngModel]="searchQuery()"
+                (ngModelChange)="searchQuery.set($event)"
+                name="search"
+              />
+              @if (searchQuery()) {
+                <button class="btn btn-outline-secondary btn-sm" type="button"
+                  (click)="searchQuery.set('')">✕</button>
+              }
+            </div>
+          </div>
+
+          <!-- Drug Filter -->
+          <div class="col-6 col-md-4">
+            <label class="form-label small fw-medium text-muted mb-1">💊 Drug</label>
+            <select class="form-select form-select-sm"
+              [ngModel]="filterDrugId()"
+              (ngModelChange)="filterDrugId.set($event === '' ? '' : +$event)"
+              name="filterDrug">
+              <option value="">All Drugs</option>
+              @for (drug of drugs(); track drug.drugId) {
+                <option [value]="drug.drugId">{{ drug.genericName }} {{ drug.strength }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="col-6 col-md-2">
+            <label class="form-label small fw-medium text-muted mb-1">🔘 Status</label>
+            <select class="form-select form-select-sm"
+              [ngModel]="filterStatus()"
+              (ngModelChange)="filterStatus.set($event)"
+              name="filterStatus">
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+          <!-- Clear -->
+          <div class="col-12 col-md-2 d-flex align-items-end">
+            @if (hasActiveFilters()) {
+              <button class="btn btn-outline-secondary btn-sm w-100" (click)="clearFilters()">
+                ✕ Clear Filters
+              </button>
+            }
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Table ── -->
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+          <span class="fw-semibold">
+            All Items
+            @if (hasActiveFilters()) {
+              <span class="badge bg-white text-primary ms-2">{{ filteredItems().length }} result(s)</span>
+            }
+          </span>
+          <button class="btn btn-light btn-sm" (click)="loadAll()" [disabled]="isLoading()">
+            @if (isLoading()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Refresh
+          </button>
+        </div>
+
+        <div class="card-body p-0">
+          @if (isLoading() && items().length === 0) {
+            <div class="text-center py-5 text-muted">
+              <div class="spinner-border text-primary mb-2"></div>
+              <p class="small">Loading items...</p>
+            </div>
+          } @else if (filteredItems().length === 0) {
+            <div class="text-center py-5 text-muted">
+              <p class="fs-4 mb-1">📭</p>
+              <p class="small">{{ hasActiveFilters() ? 'No items match your filters.' : 'No items found.' }}</p>
+              @if (hasActiveFilters()) {
+                <button class="btn btn-sm btn-outline-secondary mt-1" (click)="clearFilters()">Clear Filters</button>
+              }
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-4">ID</th>
+                    <th>Drug</th>
+                    <th>Barcode</th>
+                    <th>Pack Size</th>
+                    <th>UoM ID</th>
+                    <th>Conversion</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of filteredItems(); track item.itemId) {
+                    <tr>
+                      <td class="ps-4 fw-semibold text-primary">{{ item.itemId }}</td>
+                      <td class="fw-medium">{{ getDrugName(item.drugId) }}</td>
+                      <td class="text-muted small">{{ item.barcode }}</td>
+                      <td class="text-muted small">{{ item.packSize ?? '—' }}</td>
+                      <td class="text-muted small">{{ item.uoM }}</td>
+                      <td class="text-muted small">{{ item.conversionToEach }}</td>
+                      <td>
+                        <span class="badge rounded-pill"
+                          [class.bg-success]="item.status"
+                          [class.bg-secondary]="!item.status">
+                          {{ item.status ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                      <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                          <button class="btn btn-sm btn-outline-warning fw-medium" style="min-width: 72px;"
+                            (click)="openUpdate(item)">✏️ Edit</button>
+                          <button class="btn btn-sm btn-outline-danger fw-medium" style="min-width: 72px;"
+                            (click)="confirmDelete(item)">🗑 Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         ADD VIEW
+    ═══════════════════════════════════════════════════ -->
+    @if (activeView() === 'add') {
+      <div class="card shadow-sm border-0" style="max-width: 520px;">
+        <div class="card-header bg-success text-white py-3">
+          <span class="fw-semibold">➕ Add New Item</span>
+        </div>
+        <div class="card-body p-4">
+          <form (ngSubmit)="addItem()" #addForm="ngForm">
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Drug <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="newItem.drugId" name="drugId" required>
+                <option [value]="0" disabled>Select a drug...</option>
+                @for (drug of drugs(); track drug.drugId) {
+                  <option [value]="drug.drugId">{{ drug.genericName }} {{ drug.strength }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Barcode <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" placeholder="e.g. 1234567890123"
+                [(ngModel)]="newItem.barcode" name="barcode" required />
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-medium">UoM ID <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" placeholder="e.g. 1"
+                  [(ngModel)]="newItem.uoM" name="uoM" min="1" required />
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-medium">Pack Size <span class="text-muted small fw-normal">(optional)</span></label>
+                <input type="number" class="form-control" placeholder="e.g. 10"
+                  [(ngModel)]="newItem.packSize" name="packSize" min="1" max="1000" />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Conversion to Each <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" placeholder="e.g. 1"
+                [(ngModel)]="newItem.conversionToEach" name="conversionToEach" min="0.01" step="0.01" required />
+            </div>
+
+            <div class="mb-4 form-check">
+              <input type="checkbox" class="form-check-input" id="statusAdd"
+                [(ngModel)]="newItem.status" name="status" />
+              <label class="form-check-label fw-medium" for="statusAdd">Active</label>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success flex-fill" [disabled]="isLoading()">
+                @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                Create Item
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">Cancel</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         UPDATE VIEW
+    ═══════════════════════════════════════════════════ -->
+    @if (activeView() === 'update') {
+      <div class="card shadow-sm border-0" style="max-width: 520px;">
+        <div class="card-header bg-warning py-3 d-flex align-items-center justify-content-between">
+          <span class="fw-semibold">✏️ Update — <span class="text-dark opacity-75">{{ updateData.barcode }}</span></span>
+          <span class="badge bg-dark opacity-75">ID {{ updateData.itemId }}</span>
+        </div>
+        <div class="card-body p-4">
+          <form (ngSubmit)="updateItem()" #updateForm="ngForm">
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Drug <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="updateData.drugId" name="drugId" required>
+                @for (drug of drugs(); track drug.drugId) {
+                  <option [value]="drug.drugId">{{ drug.genericName }} {{ drug.strength }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Barcode <span class="text-danger">*</span></label>
+              <input type="text" class="form-control"
+                [(ngModel)]="updateData.barcode" name="barcode" required />
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-medium">UoM ID <span class="text-danger">*</span></label>
+                <input type="number" class="form-control"
+                  [(ngModel)]="updateData.uoM" name="uoM" min="1" required />
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-medium">Pack Size <span class="text-muted small fw-normal">(optional)</span></label>
+                <input type="number" class="form-control"
+                  [(ngModel)]="updateData.packSize" name="packSize" min="1" max="1000" />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Conversion to Each <span class="text-danger">*</span></label>
+              <input type="number" class="form-control"
+                [(ngModel)]="updateData.conversionToEach" name="conversionToEach" min="0.01" step="0.01" required />
+            </div>
+
+            <div class="mb-4 form-check">
+              <input type="checkbox" class="form-check-input" id="statusUpdate"
+                [(ngModel)]="updateData.status" name="status" />
+              <label class="form-check-label fw-medium" for="statusUpdate">Active</label>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-warning flex-fill fw-semibold" [disabled]="isLoading()">
+                @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                Save Changes
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">Cancel</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     DELETE CONFIRMATION MODAL
+════════════════════════════════════════════════════ -->
+@if (pendingDelete()) {
+  <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
+  <div class="modal d-block" style="z-index: 1050;" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-3">🗑</span>
+            <h5 class="modal-title fw-bold text-danger mb-0">Confirm Delete</h5>
+          </div>
+        </div>
+        <div class="modal-body py-3">
+          <p class="mb-1">You are about to delete:</p>
+          <div class="bg-light rounded p-3 mb-3">
+            <p class="mb-1"><span class="text-muted small">BARCODE</span><br><strong>{{ pendingDelete()!.barcode }}</strong></p>
+            <p class="mb-1"><span class="text-muted small">DRUG</span><br><strong>{{ getDrugName(pendingDelete()!.drugId) }}</strong></p>
+            <p class="mb-0"><span class="text-muted small">ID</span><br><strong>{{ pendingDelete()!.itemId }}</strong></p>
+          </div>
+          <div class="alert alert-warning py-2 small mb-0 d-flex gap-2">
+            ⚠️ This will soft-delete the item (sets it inactive). It cannot be reactivated from this screen.
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0 gap-2">
+          <button class="btn btn-outline-secondary" (click)="cancelDelete()" [disabled]="isDeleting()">Cancel</button>
+          <button class="btn btn-danger px-4" (click)="executeDelete()" [disabled]="isDeleting()">
+            @if (isDeleting()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>Deleting...
+            } @else { Yes, Delete }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
