@@ -59,7 +59,7 @@ export class AuthService {
     localStorage.removeItem('userId');
     this.isLoggedIn.set(false);
     this.userRole.set('');
-    this.router.navigate(['/ic/login']);
+    this.router.navigate(['/login']);
   }
 
   getToken(): string | null {

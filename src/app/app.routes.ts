@@ -1,19 +1,30 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { icAuthGuard } from './core/guards/ic-auth.guard';
+import { qcoAuthGuard } from './core/guards/qco-auth.guard';
+import { pharmacistAuthGuard } from './core/guards/pharmacist-auth.guard';
 
 export const routes: Routes = [
-  // Default redirect
-  { path: '', redirectTo: 'ic/login', pathMatch: 'full' },
+  // Default → unified login
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
 
-  // Existing admin login (keep as-is for admin team)
+  // ─── Unified Login ────────────────────────────────────────────────────────
   {
     path: 'login',
     loadComponent: () =>
-      import('./features/auth/login/login').then((m) => m.LoginComponent),
+      import('./features/auth/unified-login/unified-login').then(
+        (m) => m.UnifiedLoginComponent
+      ),
   },
 
-  // Existing admin routes (leave untouched for admin team)
+  // Keep IC-specific login as alias (backward compat)
+  {
+    path: 'ic/login',
+    redirectTo: 'login',
+    pathMatch: 'full',
+  },
+
+  // ─── Admin routes (existing — untouched) ─────────────────────────────────
   {
     path: 'dashboard',
     loadComponent: () =>
@@ -39,14 +50,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
 
-  // ─── Inventory Controller routes ──────────────────────────────────────────
-  {
-    path: 'ic/login',
-    loadComponent: () =>
-      import('./features/inventory-controller/ic-login/ic-login').then(
-        (m) => m.IcLoginComponent
-      ),
-  },
+  // ─── Inventory Controller ─────────────────────────────────────────────────
   {
     path: 'ic',
     loadComponent: () =>
@@ -94,5 +98,102 @@ export const routes: Routes = [
     ],
   },
 
-  { path: '**', redirectTo: 'ic/login' },
+  // ─── Quality & Compliance Officer ─────────────────────────────────────────
+  {
+    path: 'qco',
+    loadComponent: () =>
+      import('./features/quality-compliance/qco-layout/qco-layout').then(
+        (m) => m.QcoLayoutComponent
+      ),
+    canActivate: [qcoAuthGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/quality-compliance/dashboard/qco-dashboard').then(
+            (m) => m.QcoDashboardComponent
+          ),
+      },
+      {
+        path: 'quarantine',
+        loadComponent: () =>
+          import('./features/quality-compliance/quarantine/quarantine').then(
+            (m) => m.QuarantineComponent
+          ),
+      },
+      {
+        path: 'recalls',
+        loadComponent: () =>
+          import('./features/quality-compliance/recalls/recalls').then(
+            (m) => m.RecallsComponent
+          ),
+      },
+      {
+        path: 'adjustments',
+        loadComponent: () =>
+          import('./features/quality-compliance/adjustments/adjustments').then(
+            (m) => m.AdjustmentsComponent
+          ),
+      },
+      {
+        path: 'expiry',
+        loadComponent: () =>
+          import('./features/quality-compliance/expiry/qco-expiry').then(
+            (m) => m.QcoExpiryComponent
+          ),
+      },
+    ],
+  },
+
+  // ─── Pharmacist ───────────────────────────────────────────────────────────
+  {
+    path: 'pharmacist',
+    loadComponent: () =>
+      import('./features/pharmacist/pharmacist-layout/pharmacist-layout').then(
+        (m) => m.PharmacistLayoutComponent
+      ),
+    canActivate: [pharmacistAuthGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/pharmacist/dashboard/pharmacist-dashboard').then(
+            (m) => m.PharmacistDashboardComponent
+          ),
+      },
+      {
+        path: 'stock',
+        loadComponent: () =>
+          import('./features/pharmacist/stock/pharmacist-stock').then(
+            (m) => m.PharmacistStockComponent
+          ),
+      },
+      {
+        path: 'transfers',
+        loadComponent: () =>
+          import('./features/pharmacist/transfers/incoming-transfers').then(
+            (m) => m.IncomingTransfersComponent
+          ),
+      },
+      {
+        path: 'dispense',
+        loadComponent: () =>
+          import('./features/pharmacist/dispense/pharmacist-dispense').then(
+            (m) => m.PharmacistDispenseComponent
+          ),
+      },
+      {
+        path: 'expiry',
+        loadComponent: () =>
+          import('./features/pharmacist/expiry/pharmacist-expiry').then(
+            (m) => m.PharmacistExpiryComponent
+          ),
+      },
+    ],
+  },
+
+  // Wildcard
+  { path: '**', redirectTo: 'login' },
 ];
