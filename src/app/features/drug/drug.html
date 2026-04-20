@@ -2,8 +2,8 @@
 
   <!-- Header -->
   <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center gap-2">
-    <span class="fs-5">📦</span>
-    <h5 class="mb-0 fw-bold text-primary">Location Management</h5>
+    <span class="fs-5">💊</span>
+    <h5 class="mb-0 fw-bold text-primary">Drug Management</h5>
   </div>
 
   <div class="container-fluid px-4 py-4">
@@ -14,13 +14,13 @@
         [class.btn-primary]="activeView() === 'list'"
         [class.btn-outline-primary]="activeView() !== 'list'"
         (click)="setView('list')">
-        🗂 All Locations
+        🗂 All Drugs
       </button>
       <button class="btn btn-sm fw-semibold tab-btn"
         [class.btn-success]="activeView() === 'add'"
         [class.btn-outline-success]="activeView() !== 'add'"
         (click)="setView('add')">
-        ➕ Add Location
+        ➕ Add Drug
       </button>
     </div>
 
@@ -56,7 +56,7 @@
               <input
                 type="text"
                 class="form-control form-control-sm"
-                placeholder="Name or ID..."
+                placeholder="Generic name, brand or ID..."
                 [ngModel]="searchQuery()"
                 (ngModelChange)="searchQuery.set($event)"
                 name="search"
@@ -68,16 +68,30 @@
             </div>
           </div>
 
-          <!-- Type Filter -->
+          <!-- Form Filter -->
           <div class="col-6 col-md-2">
-            <label class="form-label small fw-medium text-muted mb-1">📋 Type</label>
+            <label class="form-label small fw-medium text-muted mb-1">💉 Form</label>
             <select class="form-select form-select-sm"
-              [ngModel]="filterType()"
-              (ngModelChange)="filterType.set($event === '' ? '' : +$event)"
-              name="filterType">
-              <option value="">All Types</option>
-              @for (entry of locationTypeEntries; track entry.id) {
-                <option [value]="entry.id">{{ entry.name }}</option>
+              [ngModel]="filterForm()"
+              (ngModelChange)="filterForm.set($event === '' ? '' : +$event)"
+              name="filterForm">
+              <option value="">All Forms</option>
+              @for (f of uniqueForms(); track f) {
+                <option [value]="f">Form {{ f }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Control Class Filter -->
+          <div class="col-6 col-md-2">
+            <label class="form-label small fw-medium text-muted mb-1">🔒 Control Class</label>
+            <select class="form-select form-select-sm"
+              [ngModel]="filterControl()"
+              (ngModelChange)="filterControl.set($event === '' ? '' : +$event)"
+              name="filterControl">
+              <option value="">All</option>
+              @for (c of uniqueControlClasses(); track c) {
+                <option [value]="c">Class {{ c }}</option>
               }
             </select>
           </div>
@@ -95,22 +109,7 @@
             </select>
           </div>
 
-          <!-- Parent Filter -->
-          <div class="col-6 col-md-2">
-            <label class="form-label small fw-medium text-muted mb-1">🔗 Parent</label>
-            <select class="form-select form-select-sm"
-              [ngModel]="filterParent()"
-              (ngModelChange)="filterParent.set($event === '' ? '' : $event === 'none' ? 'none' : +$event)"
-              name="filterParent">
-              <option value="">All</option>
-              <option value="none">Top-level only</option>
-              @for (loc of parentOptions(); track loc.locationId) {
-                <option [value]="loc.locationId">{{ loc.name }}</option>
-              }
-            </select>
-          </div>
-
-          <!-- Clear Filters -->
+          <!-- Clear -->
           <div class="col-6 col-md-2 d-flex align-items-end">
             @if (hasActiveFilters()) {
               <button class="btn btn-outline-secondary btn-sm w-100" (click)="clearFilters()">
@@ -126,9 +125,9 @@
       <div class="card shadow-sm border-0">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
           <span class="fw-semibold">
-            All Locations
+            All Drugs
             @if (hasActiveFilters()) {
-              <span class="badge bg-white text-primary ms-2">{{ filteredLocations().length }} result(s)</span>
+              <span class="badge bg-white text-primary ms-2">{{ filteredDrugs().length }} result(s)</span>
             }
           </span>
           <button class="btn btn-light btn-sm" (click)="loadAll()" [disabled]="isLoading()">
@@ -138,15 +137,15 @@
         </div>
 
         <div class="card-body p-0">
-          @if (isLoading() && locations().length === 0) {
+          @if (isLoading() && drugs().length === 0) {
             <div class="text-center py-5 text-muted">
               <div class="spinner-border text-primary mb-2"></div>
-              <p class="small">Loading locations...</p>
+              <p class="small">Loading drugs...</p>
             </div>
-          } @else if (filteredLocations().length === 0) {
+          } @else if (filteredDrugs().length === 0) {
             <div class="text-center py-5 text-muted">
               <p class="fs-4 mb-1">📭</p>
-              <p class="small">{{ hasActiveFilters() ? 'No locations match your filters.' : 'No locations found.' }}</p>
+              <p class="small">{{ hasActiveFilters() ? 'No drugs match your filters.' : 'No drugs found.' }}</p>
               @if (hasActiveFilters()) {
                 <button class="btn btn-sm btn-outline-secondary mt-1" (click)="clearFilters()">Clear Filters</button>
               }
@@ -157,33 +156,41 @@
                 <thead class="table-light">
                   <tr>
                     <th class="ps-4">ID</th>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Parent</th>
+                    <th>Generic Name</th>
+                    <th>Brand Name</th>
+                    <th>Strength</th>
+                    <th>Form</th>
+                    <th>Control Class</th>
+                    <th>Storage Class</th>
+                    <th>ATC Code</th>
                     <th>Status</th>
                     <th class="text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (loc of filteredLocations(); track loc.locationId) {
+                  @for (drug of filteredDrugs(); track drug.drugId) {
                     <tr>
-                      <td class="ps-4 fw-semibold text-primary">{{ loc.locationId }}</td>
-                      <td class="fw-medium">{{ loc.name }}</td>
-                      <td class="text-muted small">{{ getTypeName(loc.locationTypeId) }}</td>
-                      <td class="text-muted small">{{ getParentName(loc.parentLocationId) }}</td>
+                      <td class="ps-4 fw-semibold text-primary">{{ drug.drugId }}</td>
+                      <td class="fw-medium">{{ drug.genericName }}</td>
+                      <td class="text-muted small">{{ drug.brandName || '—' }}</td>
+                      <td class="text-muted small">{{ drug.strength }}</td>
+                      <td class="text-muted small">{{ drug.form }}</td>
+                      <td class="text-muted small">{{ drug.controlClass }}</td>
+                      <td class="text-muted small">{{ drug.storageClass }}</td>
+                      <td class="text-muted small">{{ drug.atccode || '—' }}</td>
                       <td>
                         <span class="badge rounded-pill"
-                          [class.bg-success]="loc.statusId"
-                          [class.bg-secondary]="!loc.statusId">
-                          {{ loc.statusId ? 'Active' : 'Inactive' }}
+                          [class.bg-success]="drug.status"
+                          [class.bg-secondary]="!drug.status">
+                          {{ drug.status ? 'Active' : 'Inactive' }}
                         </span>
                       </td>
                       <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
                           <button class="btn btn-sm btn-outline-warning fw-medium" style="min-width: 72px;"
-                            (click)="openUpdate(loc)">✏️ Edit</button>
+                            (click)="openUpdate(drug)">✏️ Edit</button>
                           <button class="btn btn-sm btn-outline-danger fw-medium" style="min-width: 72px;"
-                            (click)="confirmDelete(loc)">🗑 Delete</button>
+                            (click)="confirmDelete(drug)">🗑 Delete</button>
                         </div>
                       </td>
                     </tr>
@@ -200,51 +207,66 @@
          ADD VIEW
     ═══════════════════════════════════════════════════ -->
     @if (activeView() === 'add') {
-      <div class="card shadow-sm border-0" style="max-width: 520px;">
+      <div class="card shadow-sm border-0" style="max-width: 560px;">
         <div class="card-header bg-success text-white py-3">
-          <span class="fw-semibold">➕ Add New Location</span>
+          <span class="fw-semibold">➕ Add New Drug</span>
         </div>
         <div class="card-body p-4">
-          <form (ngSubmit)="addLocation()" #addForm="ngForm">
+          <form (ngSubmit)="addDrug()" #addForm="ngForm">
 
             <div class="mb-3">
-              <label class="form-label fw-medium">Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" placeholder="e.g. Main Store"
-                [(ngModel)]="newLocation.name" name="name" required />
+              <label class="form-label fw-medium">Generic Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" placeholder="e.g. Paracetamol"
+                [(ngModel)]="newDrug.genericName" name="genericName" required />
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-medium">Location Type <span class="text-danger">*</span></label>
-              <select class="form-select" [(ngModel)]="newLocation.locationTypeId" name="locationTypeId" required>
-                <option [value]="0" disabled>Select a type...</option>
-                @for (entry of locationTypeEntries; track entry.id) {
-                  <option [value]="entry.id">{{ entry.name }}</option>
-                }
-              </select>
+              <label class="form-label fw-medium">Brand Name <span class="text-muted small fw-normal">(optional)</span></label>
+              <input type="text" class="form-control" placeholder="e.g. Calpol"
+                [(ngModel)]="newDrug.brandName" name="brandName" />
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-medium">
-                Parent Location <span class="text-muted small fw-normal">(optional)</span>
-              </label>
-              <select class="form-select" [(ngModel)]="newLocation.parentLocationId" name="parentLocationId">
-                <option [value]="null">None (Top-level)</option>
-                @for (loc of locations(); track loc.locationId) {
-                  <option [value]="loc.locationId">{{ loc.name }}</option>
-                }
-              </select>
+              <label class="form-label fw-medium">Strength <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" placeholder="e.g. 500mg"
+                [(ngModel)]="newDrug.strength" name="strength" required />
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-medium">Form ID <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" placeholder="e.g. 1"
+                  [(ngModel)]="newDrug.form" name="form" min="1" required />
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-medium">Control Class ID <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" placeholder="e.g. 1"
+                  [(ngModel)]="newDrug.controlClass" name="controlClass" min="1" required />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Storage Class ID <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" placeholder="e.g. 1"
+                [(ngModel)]="newDrug.storageClass" name="storageClass" min="1" required />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">ATC Code <span class="text-muted small fw-normal">(optional)</span></label>
+              <input type="text" class="form-control" placeholder="e.g. N02BE01"
+                [(ngModel)]="newDrug.atccode" name="atccode" />
             </div>
 
             <div class="mb-4 form-check">
               <input type="checkbox" class="form-check-input" id="statusAdd"
-                [(ngModel)]="newLocation.statusId" name="statusId" />
+                [(ngModel)]="newDrug.status" name="status" />
               <label class="form-check-label fw-medium" for="statusAdd">Active</label>
             </div>
 
             <div class="d-flex gap-2">
               <button type="submit" class="btn btn-success flex-fill" [disabled]="isLoading()">
                 @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-                Create Location
+                Create Drug
               </button>
               <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">Cancel</button>
             </div>
@@ -258,46 +280,60 @@
          UPDATE VIEW
     ═══════════════════════════════════════════════════ -->
     @if (activeView() === 'update') {
-      <div class="card shadow-sm border-0" style="max-width: 520px;">
+      <div class="card shadow-sm border-0" style="max-width: 560px;">
         <div class="card-header bg-warning py-3 d-flex align-items-center justify-content-between">
-          <span class="fw-semibold">✏️ Update — <span class="text-dark opacity-75">{{ updateData.name }}</span></span>
-          <span class="badge bg-dark opacity-75">ID {{ updateData.locationId }}</span>
+          <span class="fw-semibold">✏️ Update — <span class="text-dark opacity-75">{{ updateData.genericName }}</span></span>
+          <span class="badge bg-dark opacity-75">ID {{ updateData.drugId }}</span>
         </div>
         <div class="card-body p-4">
-          <form (ngSubmit)="updateLocation()" #updateForm="ngForm">
+          <form (ngSubmit)="updateDrug()" #updateForm="ngForm">
 
             <div class="mb-3">
-              <label class="form-label fw-medium">Name <span class="text-danger">*</span></label>
+              <label class="form-label fw-medium">Generic Name <span class="text-danger">*</span></label>
               <input type="text" class="form-control"
-                [(ngModel)]="updateData.name" name="name" required />
+                [(ngModel)]="updateData.genericName" name="genericName" required />
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-medium">Location Type <span class="text-danger">*</span></label>
-              <select class="form-select" [(ngModel)]="updateData.locationTypeId" name="locationTypeId" required>
-                @for (entry of locationTypeEntries; track entry.id) {
-                  <option [value]="entry.id">{{ entry.name }}</option>
-                }
-              </select>
+              <label class="form-label fw-medium">Brand Name <span class="text-muted small fw-normal">(optional)</span></label>
+              <input type="text" class="form-control"
+                [(ngModel)]="updateData.brandName" name="brandName" />
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-medium">
-                Parent Location <span class="text-muted small fw-normal">(optional)</span>
-              </label>
-              <select class="form-select" [(ngModel)]="updateData.parentLocationId" name="parentLocationId">
-                <option [value]="null">None (Top-level)</option>
-                @for (loc of locations(); track loc.locationId) {
-                  @if (loc.locationId !== updateData.locationId) {
-                    <option [value]="loc.locationId">{{ loc.name }}</option>
-                  }
-                }
-              </select>
+              <label class="form-label fw-medium">Strength <span class="text-danger">*</span></label>
+              <input type="text" class="form-control"
+                [(ngModel)]="updateData.strength" name="strength" required />
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-medium">Form ID <span class="text-danger">*</span></label>
+                <input type="number" class="form-control"
+                  [(ngModel)]="updateData.form" name="form" min="1" required />
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-medium">Control Class ID <span class="text-danger">*</span></label>
+                <input type="number" class="form-control"
+                  [(ngModel)]="updateData.controlClass" name="controlClass" min="1" required />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Storage Class ID <span class="text-danger">*</span></label>
+              <input type="number" class="form-control"
+                [(ngModel)]="updateData.storageClass" name="storageClass" min="1" required />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">ATC Code <span class="text-muted small fw-normal">(optional)</span></label>
+              <input type="text" class="form-control"
+                [(ngModel)]="updateData.atccode" name="atccode" />
             </div>
 
             <div class="mb-4 form-check">
               <input type="checkbox" class="form-check-input" id="statusUpdate"
-                [(ngModel)]="updateData.statusId" name="statusId" />
+                [(ngModel)]="updateData.status" name="status" />
               <label class="form-check-label fw-medium" for="statusUpdate">Active</label>
             </div>
 
@@ -334,11 +370,12 @@
         <div class="modal-body py-3">
           <p class="mb-1">You are about to delete:</p>
           <div class="bg-light rounded p-3 mb-3">
-            <p class="mb-1"><span class="text-muted small">NAME</span><br><strong>{{ pendingDelete()!.name }}</strong></p>
-            <p class="mb-0"><span class="text-muted small">ID</span><br><strong>{{ pendingDelete()!.locationId }}</strong></p>
+            <p class="mb-1"><span class="text-muted small">GENERIC NAME</span><br><strong>{{ pendingDelete()!.genericName }}</strong></p>
+            <p class="mb-1"><span class="text-muted small">STRENGTH</span><br><strong>{{ pendingDelete()!.strength }}</strong></p>
+            <p class="mb-0"><span class="text-muted small">ID</span><br><strong>{{ pendingDelete()!.drugId }}</strong></p>
           </div>
-          <div class="alert alert-warning py-2 small mb-0 d-flex gap-2">
-            ⚠️ This cannot be undone. If this location has dependencies (bins, inventory, etc.) the deletion will be blocked.
+          <div class="alert alert-danger py-2 small mb-0 d-flex gap-2">
+            ⚠️ This is a permanent (hard) delete and cannot be undone.
           </div>
         </div>
         <div class="modal-footer border-0 pt-0 gap-2">

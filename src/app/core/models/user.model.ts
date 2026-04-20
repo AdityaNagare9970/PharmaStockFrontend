@@ -16,6 +16,7 @@ export interface User {
   userId: number;
   username: string;
   roleId: number;
+  roleType: string;
   email: string;
   phone: string;
   statusId: boolean;

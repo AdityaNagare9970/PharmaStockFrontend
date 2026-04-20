@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Core/DTO/Item/UpdatePurchaseItemDTO.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Core/DTO/Item/PurchaseItemResponseDTO.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Models/Item.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Core/Interfaces/Service/IDrugService.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Core/Interfaces/Service/IItemService.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Infrastructure/Repositories/DrugRepository.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Infrastructure/Repositories/ItemRepository.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Models/ControlClass.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Models/UoM.cs\")",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(item['path']\\) for item in data.get\\('tree',[]\\) if item['type']=='blob']\")",
+      "Bash(python3 -c ':*)",
+      "Bash(node -e ':*)"
+    ]
+  }
+}

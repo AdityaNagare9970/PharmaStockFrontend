@@ -1,12 +1,9 @@
 <div class="min-vh-100 bg-gray-50">
 
   <!-- Header -->
-  <div class="bg-white border-bottom shadow-sm px-4 py-3 d-flex align-items-center justify-content-between">
-    <div class="d-flex align-items-center gap-2">
-      <span class="fs-4">👤</span>
-      <h5 class="mb-0 fw-bold text-primary">User Management</h5>
-    </div>
-    <a routerLink="/admin" class="btn btn-outline-secondary btn-sm">← Back</a>
+  <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center gap-2">
+    <span class="fs-5">👤</span>
+    <h5 class="mb-0 fw-bold text-primary">User Management</h5>
   </div>
 
   <div class="container-fluid px-4 py-4">
@@ -148,6 +145,7 @@
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Role</th>
+                    <th>Created By</th>
                     <th>Status</th>
                     <th class="text-center">Actions</th>
                   </tr>
@@ -161,9 +159,10 @@
                       <td class="text-muted small">{{ user.phone }}</td>
                       <td>
                         <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary fw-medium">
-                          {{ getRoleName(user.roleId) }}
+                          {{ getRoleName(user) }}
                         </span>
                       </td>
+                      <td class="text-muted small">{{ user.createdBy || '—' }}</td>
                       <td>
                         <span class="badge rounded-pill"
                           [class.bg-success]="user.statusId"
@@ -213,7 +212,8 @@
             <div class="mb-3">
               <label class="form-label fw-medium">Phone <span class="text-danger">*</span></label>
               <input type="text" class="form-control" placeholder="e.g. 9876543210"
-                [(ngModel)]="newUser.phone" name="phone" required />
+                [(ngModel)]="newUser.phone" name="phone" maxlength="10" required />
+              <div class="form-text text-muted">Exactly 10 digits, numbers only.</div>
             </div>
 
             <div class="mb-3">
@@ -274,7 +274,8 @@
             <div class="mb-3">
               <label class="form-label fw-medium">Phone <span class="text-danger">*</span></label>
               <input type="text" class="form-control"
-                [(ngModel)]="updateData.phone" name="phone" required />
+                [(ngModel)]="updateData.phone" name="phone" maxlength="10" required />
+              <div class="form-text text-muted">Exactly 10 digits, numbers only.</div>
             </div>
 
             <div class="mb-3">

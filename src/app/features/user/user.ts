@@ -10,7 +10,7 @@ type ActiveView = 'list' | 'add' | 'update';
 
 @Component({
   selector: 'app-user',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule],
   templateUrl: './user.html',
   styleUrl: './user.css'
 })
@@ -80,10 +80,11 @@ export class UserComponent implements OnInit {
 
   // ── Helpers ──────────────────────────────────────────
 
-  getRoleName(roleId: number): string {
-    return this.roles().find(r => r.roleId === roleId)?.roleType
-      ?? UserRoleNames[roleId]
-      ?? `Role ${roleId}`;
+  getRoleName(user: User): string {
+    return user.roleType
+      || this.roles().find(r => r.roleId === user.roleId)?.roleType
+      || UserRoleNames[user.roleId]
+      || `Role ${user.roleId}`;
   }
 
   clearMessages() {
@@ -130,11 +131,15 @@ export class UserComponent implements OnInit {
 
   // ── Add ──────────────────────────────────────────────
 
+  private readonly phonePattern = /^[0-9]{10}$/;
+
   addUser() {
-    if (!this.newUser.username.trim()) { this.errorMessage.set('Username is required.'); return; }
-    if (!this.newUser.email.trim())    { this.errorMessage.set('Email is required.'); return; }
-    if (!this.newUser.phone.trim())    { this.errorMessage.set('Phone is required.'); return; }
-    if (!this.newUser.roleId)          { this.errorMessage.set('Role is required.'); return; }
+    if (!this.newUser.username.trim())             { this.errorMessage.set('Username is required (min 3 characters).'); return; }
+    if (this.newUser.username.trim().length < 3)   { this.errorMessage.set('Username must be at least 3 characters.'); return; }
+    if (!this.newUser.email.trim())                { this.errorMessage.set('Email is required.'); return; }
+    if (!this.newUser.phone.trim())                { this.errorMessage.set('Phone is required.'); return; }
+    if (!this.phonePattern.test(this.newUser.phone)) { this.errorMessage.set('Phone must be exactly 10 digits.'); return; }
+    if (!this.newUser.roleId)                      { this.errorMessage.set('Role is required.'); return; }
 
     this.isLoading.set(true);
     this.clearMessages();
@@ -168,10 +173,12 @@ export class UserComponent implements OnInit {
   }
 
   updateUser() {
-    if (!this.updateData.username.trim()) { this.errorMessage.set('Username is required.'); return; }
-    if (!this.updateData.email.trim())    { this.errorMessage.set('Email is required.'); return; }
-    if (!this.updateData.phone.trim())    { this.errorMessage.set('Phone is required.'); return; }
-    if (!this.updateData.roleId)          { this.errorMessage.set('Role is required.'); return; }
+    if (!this.updateData.username.trim())               { this.errorMessage.set('Username is required (min 3 characters).'); return; }
+    if (this.updateData.username.trim().length < 3)     { this.errorMessage.set('Username must be at least 3 characters.'); return; }
+    if (!this.updateData.email.trim())                  { this.errorMessage.set('Email is required.'); return; }
+    if (!this.updateData.phone.trim())                  { this.errorMessage.set('Phone is required.'); return; }
+    if (!this.phonePattern.test(this.updateData.phone)) { this.errorMessage.set('Phone must be exactly 10 digits.'); return; }
+    if (!this.updateData.roleId)                        { this.errorMessage.set('Role is required.'); return; }
 
     this.isLoading.set(true);
     this.clearMessages();

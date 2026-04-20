@@ -1,6 +1,5 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { LocationService } from '../../core/services/location.service';
 import { Location, LocationTypeEnum, CreateLocation, UpdateLocation } from '../../core/models/location.model';
 import { finalize } from 'rxjs';
@@ -10,7 +9,7 @@ type StatusFilter = 'all' | 'active' | 'inactive';
 
 @Component({
   selector: 'app-location',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule],
   templateUrl: './location.html',
   styleUrl: './location.css'
 })
