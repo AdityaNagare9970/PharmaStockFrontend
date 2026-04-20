@@ -24,6 +24,13 @@ export class Login {
   errorMessage = signal('');
   isLoading = signal(false);
 
+  constructor(private authService: AuthService, private router: Router) {
+    // Already logged in → skip login page and go straight to dashboard
+    if (authService.isLoggedIn()) {
+      router.navigate(['/dashboard']);
+    }
+  }
+  
   constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit() {
@@ -40,6 +47,8 @@ export class Login {
       .subscribe({
         next: (res) => {
           this.authService.saveToken(res.token);
+          this.authService.saveRole(res.role);
+          this.router.navigate(['/dashboard']);
           const route = ROLE_ROUTES[res.role] ?? '/auth/login';
           this.router.navigate([route]);
         },

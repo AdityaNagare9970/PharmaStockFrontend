@@ -1,0 +1,140 @@
+<!-- ── Top Bar ─────────────────────────────────────────────────────────────── -->
+<div class="page-topbar">
+  <h2 class="page-title">Procurement Officer </h2>
+  <button class="btn-logout" (click)="logout()">Logout</button>
+</div>
+
+<!-- ── Body ──────────────────────────────────────────────────────────────── -->
+<div class="page-body">
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <span>Loading dashboard...</span>
+    </div>
+  }
+
+  @if (!isLoading()) {
+
+    <!-- ── Stat Cards ───────────────────────────────────────────────────── -->
+    <div class="stat-grid">
+
+      <!-- Vendors -->
+      <div class="stat-card stat-blue">
+        <div class="stat-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M2 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v14H2V1Zm9 0H5v8h6V1Zm0 9H5v5h6v-5Zm2 5V1h1v14h-1ZM3 1H2v14h1V1Z"/>
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">{{ totalVendors() }}</div>
+          <div class="stat-label">Total Vendors</div>
+          <div class="stat-sub">{{ activeVendors() }} active</div>
+        </div>
+        <a routerLink="/vendors" class="stat-link">Manage &rarr;</a>
+      </div>
+
+      <!-- Open POs -->
+      <div class="stat-card stat-green">
+        <div class="stat-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
+            <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm0 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3z"/>
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">{{ openPOs() }}</div>
+          <div class="stat-label">Open Purchase Orders</div>
+          <div class="stat-sub">{{ totalPOs() }} total POs</div>
+        </div>
+        <a routerLink="/purchase-orders" class="stat-link">View POs &rarr;</a>
+      </div>
+
+      <!-- Due Receipts -->
+      <div class="stat-card" [class.stat-red]="dueReceipts() > 0" [class.stat-gray]="dueReceipts() === 0">
+        <div class="stat-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">{{ dueReceipts() }}</div>
+          <div class="stat-label">Due Receipts</div>
+          <div class="stat-sub">Expected today or earlier</div>
+        </div>
+        <a routerLink="/purchase-orders" class="stat-link">Review &rarr;</a>
+      </div>
+
+      <!-- Pricing / Terms -->
+      <div class="stat-card stat-purple">
+        <div class="stat-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5zM3.14 5l1.25 5h8.22l1.25-5H3.14zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"/>
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">{{ totalItems() }}</div>
+          <div class="stat-label">Purchase Items</div>
+          <div class="stat-sub">Total value: ${{ formatCurrency(totalItemValue()) }}</div>
+        </div>
+        <a routerLink="/purchase-items" class="stat-link">View Items &rarr;</a>
+      </div>
+
+    </div>
+
+    <!-- ── Quick Actions ────────────────────────────────────────────────── -->
+    <div class="section-title">Quick Actions</div>
+    <div class="quick-grid">
+      <a routerLink="/vendors" class="quick-card">
+        <span class="quick-icon">🏢</span>
+        <span class="quick-label">Vendors</span>
+        <span class="quick-desc">Manage suppliers &amp; contacts</span>
+      </a>
+      <a routerLink="/purchase-orders" class="quick-card">
+        <span class="quick-icon">📋</span>
+        <span class="quick-label">Purchase Orders</span>
+        <span class="quick-desc">Create &amp; track orders</span>
+      </a>
+      <a routerLink="/purchase-items" class="quick-card">
+        <span class="quick-icon">📦</span>
+        <span class="quick-label">Purchase Items</span>
+        <span class="quick-desc">Pricing &amp; order line items</span>
+      </a>
+    </div>
+
+    <!-- ── Open POs Table ───────────────────────────────────────────────── -->
+    @if (recentOrders().length > 0) {
+      <div class="section-title" style="margin-top:2rem">Open Purchase Orders</div>
+      <div class="mini-card">
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>PO ID</th>
+              <th>VENDOR</th>
+              <th>ORDER DATE</th>
+              <th>EXPECTED DATE</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (o of recentOrders(); track o.purchaseOrderId) {
+              <tr>
+                <td class="po-id">PO-{{ o.purchaseOrderId }}</td>
+                <td>{{ o.vendorName }}</td>
+                <td>{{ formatDate(o.orderDate) }}</td>
+                <td>{{ formatDate(o.expectedDate) }}</td>
+                <td><span [class]="statusClass(o.status)">{{ o.status }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <div class="mini-footer">
+          <a routerLink="/purchase-orders" class="view-all-link">View all purchase orders &rarr;</a>
+        </div>
+      </div>
+    }
+
+  }
+
+</div>

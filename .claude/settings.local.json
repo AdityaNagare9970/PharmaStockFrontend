@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Bash(npx ng *)"
       "WebFetch(domain:api.github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(curl -s \"https://api.github.com/repos/aronnk13/PharmaStock/git/trees/develop?recursive=1\")",
