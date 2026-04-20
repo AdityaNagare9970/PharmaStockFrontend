@@ -1,0 +1,312 @@
+<div class="min-vh-100 bg-gray-50">
+
+  <!-- Header -->
+  <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center gap-2">
+    <span class="fs-5">👤</span>
+    <h5 class="mb-0 fw-bold text-primary">User Management</h5>
+  </div>
+
+  <div class="container-fluid px-4 py-4">
+
+    <!-- Tab Buttons -->
+    <div class="d-flex gap-2 mb-4">
+      <button class="btn btn-sm fw-semibold tab-btn"
+        [class.btn-primary]="activeView() === 'list'"
+        [class.btn-outline-primary]="activeView() !== 'list'"
+        (click)="setView('list')">
+        🗂 All Users
+      </button>
+      <button class="btn btn-sm fw-semibold tab-btn"
+        [class.btn-success]="activeView() === 'add'"
+        [class.btn-outline-success]="activeView() !== 'add'"
+        (click)="setView('add')">
+        ➕ Add User
+      </button>
+    </div>
+
+    <!-- Feedback -->
+    @if (successMessage()) {
+      <div class="alert alert-success d-flex align-items-center gap-2 py-2 mb-3">
+        ✅ {{ successMessage() }}
+      </div>
+    }
+    @if (errorMessage()) {
+      <div class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-3">
+        <span class="fs-5">❌</span>
+        <div>
+          <strong>Error</strong><br>
+          <span class="small">{{ errorMessage() }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         LIST VIEW
+    ═══════════════════════════════════════════════════ -->
+    @if (activeView() === 'list') {
+
+      <!-- ── Search & Filter Bar ── -->
+      <div class="card border-0 shadow-sm mb-3 p-3">
+        <div class="row g-2 align-items-end">
+
+          <!-- Text Search -->
+          <div class="col-12 col-md-5">
+            <label class="form-label small fw-medium text-muted mb-1">🔍 Search</label>
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="Username, email or ID..."
+                [ngModel]="searchQuery()"
+                (ngModelChange)="searchQuery.set($event)"
+                name="search"
+              />
+              @if (searchQuery()) {
+                <button class="btn btn-outline-secondary btn-sm" type="button"
+                  (click)="searchQuery.set('')">✕</button>
+              }
+            </div>
+          </div>
+
+          <!-- Role Filter -->
+          <div class="col-6 col-md-3">
+            <label class="form-label small fw-medium text-muted mb-1">🎭 Role</label>
+            <select class="form-select form-select-sm"
+              [ngModel]="filterRole()"
+              (ngModelChange)="filterRole.set($event === '' ? '' : +$event)"
+              name="filterRole">
+              <option value="">All Roles</option>
+              @for (role of roles(); track role.roleId) {
+                <option [value]="role.roleId">{{ role.roleType }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="col-6 col-md-2">
+            <label class="form-label small fw-medium text-muted mb-1">🔘 Status</label>
+            <select class="form-select form-select-sm"
+              [ngModel]="filterStatus()"
+              (ngModelChange)="filterStatus.set($event)"
+              name="filterStatus">
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+          <!-- Clear -->
+          <div class="col-12 col-md-2 d-flex align-items-end">
+            @if (hasActiveFilters()) {
+              <button class="btn btn-outline-secondary btn-sm w-100" (click)="clearFilters()">
+                ✕ Clear Filters
+              </button>
+            }
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+          <span class="fw-semibold">
+            All Users
+            @if (hasActiveFilters()) {
+              <span class="badge bg-white text-primary ms-2">{{ filteredUsers().length }} result(s)</span>
+            }
+          </span>
+          <button class="btn btn-light btn-sm" (click)="loadAll()" [disabled]="isLoading()">
+            @if (isLoading()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Refresh
+          </button>
+        </div>
+
+        <div class="card-body p-0">
+          @if (isLoading() && users().length === 0) {
+            <div class="text-center py-5 text-muted">
+              <div class="spinner-border text-primary mb-2"></div>
+              <p class="small">Loading users...</p>
+            </div>
+          } @else if (filteredUsers().length === 0) {
+            <div class="text-center py-5 text-muted">
+              <p class="fs-4 mb-1">📭</p>
+              <p class="small">{{ hasActiveFilters() ? 'No users match your filters.' : 'No users found.' }}</p>
+              @if (hasActiveFilters()) {
+                <button class="btn btn-sm btn-outline-secondary mt-1" (click)="clearFilters()">Clear Filters</button>
+              }
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-4">ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Created By</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (user of filteredUsers(); track user.userId) {
+                    <tr>
+                      <td class="ps-4 fw-semibold text-primary">{{ user.userId }}</td>
+                      <td class="fw-medium">{{ user.username }}</td>
+                      <td class="text-muted small">{{ user.email }}</td>
+                      <td class="text-muted small">{{ user.phone }}</td>
+                      <td>
+                        <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary fw-medium">
+                          {{ getRoleName(user) }}
+                        </span>
+                      </td>
+                      <td class="text-muted small">{{ user.createdBy || '—' }}</td>
+                      <td>
+                        <span class="badge rounded-pill"
+                          [class.bg-success]="user.statusId"
+                          [class.bg-secondary]="!user.statusId">
+                          {{ user.statusId ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                      <td class="text-center">
+                        <button class="btn btn-sm btn-outline-warning fw-medium" style="min-width: 72px;"
+                          (click)="openUpdate(user)">
+                          ✏️ Edit
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         ADD VIEW
+    ═══════════════════════════════════════════════════ -->
+    @if (activeView() === 'add') {
+      <div class="card shadow-sm border-0" style="max-width: 520px;">
+        <div class="card-header bg-success text-white py-3">
+          <span class="fw-semibold">➕ Add New User</span>
+        </div>
+        <div class="card-body p-4">
+          <form (ngSubmit)="addUser()" #addForm="ngForm">
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Username <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" placeholder="e.g. john_doe"
+                [(ngModel)]="newUser.username" name="username" required />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Email <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" placeholder="e.g. john@pharma.com"
+                [(ngModel)]="newUser.email" name="email" required />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Phone <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" placeholder="e.g. 9876543210"
+                [(ngModel)]="newUser.phone" name="phone" maxlength="10" required />
+              <div class="form-text text-muted">Exactly 10 digits, numbers only.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Role <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="newUser.roleId" name="roleId" required>
+                <option [value]="0" disabled>Select a role...</option>
+                @for (role of roles(); track role.roleId) {
+                  <option [value]="role.roleId">{{ role.roleType }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Admin Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" placeholder="Your name"
+                [(ngModel)]="newUser.adminName" name="adminName" required />
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-success flex-fill" [disabled]="isLoading()">
+                @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                Create User
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">
+                Cancel
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         UPDATE VIEW  (pre-filled from row click)
+    ═══════════════════════════════════════════════════ -->
+    @if (activeView() === 'update') {
+      <div class="card shadow-sm border-0" style="max-width: 520px;">
+        <div class="card-header bg-warning py-3 d-flex align-items-center justify-content-between">
+          <span class="fw-semibold">✏️ Update User — <span class="text-dark opacity-75">{{ updateData.username }}</span></span>
+          <span class="badge bg-dark opacity-75">ID {{ updateData.userId }}</span>
+        </div>
+        <div class="card-body p-4">
+          <form (ngSubmit)="updateUser()" #updateForm="ngForm">
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Username <span class="text-danger">*</span></label>
+              <input type="text" class="form-control"
+                [(ngModel)]="updateData.username" name="username" required />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Email <span class="text-danger">*</span></label>
+              <input type="email" class="form-control"
+                [(ngModel)]="updateData.email" name="email" required />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Phone <span class="text-danger">*</span></label>
+              <input type="text" class="form-control"
+                [(ngModel)]="updateData.phone" name="phone" maxlength="10" required />
+              <div class="form-text text-muted">Exactly 10 digits, numbers only.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Role <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="updateData.roleId" name="roleId" required>
+                @for (role of roles(); track role.roleId) {
+                  <option [value]="role.roleId">{{ role.roleType }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Admin Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control"
+                [(ngModel)]="updateData.adminName" name="adminName" required />
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-warning flex-fill fw-semibold" [disabled]="isLoading()">
+                @if (isLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                Save Changes
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="setView('list')">
+                Cancel
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

@@ -1,0 +1,52 @@
+<div class="min-vh-100 bg-light">
+
+  <nav class="navbar navbar-dark px-4 py-3" style="background-color: #fd7e14;">
+    <span class="navbar-brand fw-bold fs-5">🏥 PharmaStock — <span class="opacity-75 fs-6">Pharmacist</span></span>
+    <button class="btn btn-outline-light btn-sm" (click)="logout()">Logout</button>
+  </nav>
+
+  <div class="container py-4">
+    <h6 class="text-muted text-uppercase fw-semibold mb-3 small">Pharmacist Modules</h6>
+
+    <div class="row g-3">
+
+      <div class="col-sm-6 col-md-4">
+        <a routerLink="/pharmacist/dispense" class="card border-0 shadow-sm text-decoration-none h-100 card-hover">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <span class="fs-2">💉</span>
+            <div>
+              <p class="mb-0 fw-semibold text-dark">Dispense</p>
+              <p class="mb-0 text-muted small">Issue drugs to patients</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <a routerLink="/pharmacist/stock-view" class="card border-0 shadow-sm text-decoration-none h-100 card-hover">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <span class="fs-2">👁</span>
+            <div>
+              <p class="mb-0 fw-semibold text-dark">Stock View</p>
+              <p class="mb-0 text-muted small">Check current stock levels</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <a routerLink="/pharmacist/replenishment" class="card border-0 shadow-sm text-decoration-none h-100 card-hover">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <span class="fs-2">📥</span>
+            <div>
+              <p class="mb-0 fw-semibold text-dark">Replenishment Requests</p>
+              <p class="mb-0 text-muted small">Request stock refills</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>

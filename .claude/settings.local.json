@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -s \"https://api.github.com/repos/aronnk13/PharmaStock/git/trees/develop?recursive=1\")",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(item['path']\\) for item in data.get\\('tree',[]\\) if 'ontroller' in item['path'] or 'controller' in item['path']]\")",
+      "Bash(gh api:*)",
+      "Bash(curl -s \"https://api.github.com/repos/aronnk13/PharmaStock/git/trees/features/user?recursive=1\")",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); [print\\(item['path']\\) for item in data.get\\('tree', []\\) if item['type']=='blob']\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Controllers/Drug/DrugController.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Controllers/Item/ItemController.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Core/Services/DrugService.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Core/Services/ItemService.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Core/DTO/Drug/CreateDrugDTO.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Core/DTO/Drug/UpdateDrugDTO.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Core/DTO/Drug/GetDrugDTO.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Core/DTO/Drug/DrugFilterDTO.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aronnk13/PharmaStock/develop/Core/DTO/Auth/DrugDeletedResponseDTO.cs\")"
+    ]
+  }
+}
