@@ -16,7 +16,12 @@ export class Login {
   errorMessage = signal('');
   isLoading = signal(false);
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) {
+    // Already logged in → skip login page and go straight to dashboard
+    if (authService.isLoggedIn()) {
+      router.navigate(['/dashboard']);
+    }
+  }
   
   onSubmit() {
     if (!this.credentials.username || !this.credentials.password) {
@@ -31,8 +36,8 @@ export class Login {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
-          console.log(res.token);
           this.authService.saveToken(res.token);
+          this.authService.saveRole(res.role);
           this.router.navigate(['/dashboard']);
         },
         error: (err) => {
