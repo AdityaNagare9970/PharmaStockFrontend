@@ -1,4 +1,8 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
+import { icAuthGuard } from './core/guards/ic-auth.guard';
+import { qcoAuthGuard } from './core/guards/qco-auth.guard';
+import { pharmacistAuthGuard } from './core/guards/pharmacist-auth.guard';
 
 import { Login } from './features/auth/login/login';
 import { Dashboard } from './features/dashboard/dashboard';
