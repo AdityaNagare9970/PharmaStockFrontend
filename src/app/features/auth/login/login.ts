@@ -30,8 +30,6 @@ export class Login {
       router.navigate(['/dashboard']);
     }
   }
-  
-  constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit() {
     if (!this.credentials.username || !this.credentials.password) {
