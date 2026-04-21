@@ -5,6 +5,7 @@ import {
   QuarantineActionDTO,
   CreateQuarantineActionDTO,
   RecallNoticeDTO,
+  CreateRecallNoticeDTO,
   StockAdjustmentDTO,
 } from '../models/qco.model';
 import { ExpiryWatch, InventoryLot } from '../models/inventory-controller.model';
@@ -40,6 +41,14 @@ export class QcoService {
   // Recall Notices
   getRecallNotices() {
     return this.http.get<RecallNoticeDTO[]>(`${this.BASE}/recall`);
+  }
+
+  createRecallNotice(dto: CreateRecallNoticeDTO) {
+    return this.http.post<RecallNoticeDTO>(`${this.BASE}/recall`, dto);
+  }
+
+  resolveRecall(id: number) {
+    return this.http.patch(`${this.BASE}/recall/${id}/resolve`, {});
   }
 
   // Stock Adjustments

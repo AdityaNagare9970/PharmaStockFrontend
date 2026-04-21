@@ -1,0 +1,52 @@
+<div class="shell">
+
+  <!-- ── Sidebar ─────────────────────────────────────── -->
+  <aside class="sidebar">
+
+    <div class="sidebar-brand">
+      <span class="brand-icon">🏥</span>
+      <div>
+        <div class="brand-name">PharmaStock</div>
+        <div class="brand-role">Procurement Officer</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="nav-section-label">Modules</p>
+
+      <a routerLink="/procurement/dashboard" routerLinkActive="active"
+         [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
+        <span class="nav-icon">🏠</span><span>Dashboard</span>
+      </a>
+
+      <a routerLink="/procurement/purchase-orders" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">🛒</span><span>Purchase Orders</span>
+      </a>
+
+      <a routerLink="/procurement/vendors" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">🏢</span><span>Vendors</span>
+      </a>
+
+      <a routerLink="/procurement/goods-receipt" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">📬</span><span>Goods Receipt</span>
+      </a>
+
+      <a routerLink="/procurement/items" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">📋</span><span>Items</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="logout-btn" (click)="logout()">
+        <span>🚪</span> Logout
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ── Main Content ───────────────────────────────── -->
+  <main class="content-area">
+    <router-outlet></router-outlet>
+  </main>
+
+</div>

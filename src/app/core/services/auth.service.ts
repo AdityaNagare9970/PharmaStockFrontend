@@ -31,10 +31,11 @@ export class AuthService {
     return localStorage.getItem('token');
   }
 
+  /** Returns normalised role string (lowercase, no spaces/underscores). */
   getRole(): string {
     // 1. Check localStorage first
     const stored = localStorage.getItem('role');
-    if (stored) return stored;
+    if (stored) return stored.toLowerCase().replace(/[\s_]/g, '');
 
     // 2. Fall back: decode role from JWT payload
     const token = this.getToken();
@@ -42,20 +43,14 @@ export class AuthService {
 
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-
-      // .NET JWT standard role claim
       const role =
         payload['role'] ??
         payload['roles'] ??
         payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ??
         '';
-
       const resolved = Array.isArray(role) ? role[0] : role;
-      if (resolved) {
-        // Cache it so future calls don't re-decode
-        this.saveRole(resolved);
-      }
-      return (resolved as string).toLowerCase();
+      if (resolved) this.saveRole(resolved);
+      return (resolved as string).toLowerCase().replace(/[\s_]/g, '');
     } catch {
       return '';
     }
@@ -63,26 +58,32 @@ export class AuthService {
 
   hasRole(...roles: string[]): boolean {
     const current = this.getRole();
-    return roles.map(r => r.toLowerCase()).includes(current);
+    return roles.map(r => r.toLowerCase().replace(/[\s_]/g, '')).includes(current);
   }
 
   isLoggedIn(): boolean {
     return !!this.getToken();
   }
 
-  getRole(): string | null {
-    const token = this.getToken();
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.role ?? null;
-    } catch {
-      return null;
-    }
+  isInventoryController(): boolean {
+    return this.hasRole('inventorycontroller', 'inventory_controller');
+  }
+
+  isQCO(): boolean {
+    return this.hasRole('qualitycomplianceofficer', 'quality_compliance_officer');
+  }
+
+  isPharmacist(): boolean {
+    return this.hasRole('pharmacist');
+  }
+
+  isAdmin(): boolean {
+    return this.hasRole('admin');
   }
 
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
+    localStorage.removeItem('userId');
   }
 }

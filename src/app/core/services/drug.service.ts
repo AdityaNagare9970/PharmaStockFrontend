@@ -24,11 +24,24 @@ export class DrugService {
     };
   }
 
-  getAll() {
-    return this.http.get<any>(`${this.apiUrl}?PageSize=1000`).pipe(
+  getAll(filter?: {
+    page?: number;
+    pageSize?: number;
+    genericName?: string;
+    storageClass?: number;
+    controlClass?: number;
+    status?: boolean;
+  }) {
+    let params = `PageSize=${filter?.pageSize ?? 1000}&Page=${filter?.page ?? 1}`;
+    if (filter?.genericName)                  params += `&GenericName=${encodeURIComponent(filter.genericName)}`;
+    if (filter?.storageClass != null)         params += `&StorageClass=${filter.storageClass}`;
+    if (filter?.controlClass != null)         params += `&ControlClass=${filter.controlClass}`;
+    if (filter?.status       != null)         params += `&Status=${filter.status}`;
+
+    return this.http.get<any>(`${this.apiUrl}?${params}`).pipe(
       map(result => {
         const items: any[] = result.items ?? result.Items ?? result ?? [];
-        return items.map(raw => this.normalize(raw));
+        return { items: items.map(raw => this.normalize(raw)), totalCount: result.totalCount ?? result.TotalCount ?? items.length };
       })
     );
   }

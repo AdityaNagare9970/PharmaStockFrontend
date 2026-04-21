@@ -54,6 +54,12 @@ export interface RecallNoticeDTO {
   status: boolean;
 }
 
+export interface CreateRecallNoticeDTO {
+  drugId: number;
+  reason: string;
+  action: number;  // RecallActionId
+}
+
 export interface StockAdjustmentDTO {
   stockAdjustmentId: number;
   locationId: number;

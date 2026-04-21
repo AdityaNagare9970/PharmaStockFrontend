@@ -136,7 +136,7 @@ export class DrugComponent implements OnInit {
     this.drugService.getAll()
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next:  (data) => this.drugs.set(data),
+        next:  (data) => this.drugs.set(data.items ?? (data as any)),
         error: (err)  => this.errorMessage.set(err.error?.message ?? 'Failed to fetch drugs.')
       });
   }

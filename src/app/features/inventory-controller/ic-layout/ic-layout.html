@@ -1,0 +1,52 @@
+<div class="shell">
+
+  <!-- ── Sidebar ─────────────────────────────────────── -->
+  <aside class="sidebar">
+
+    <div class="sidebar-brand">
+      <span class="brand-icon">🏥</span>
+      <div>
+        <div class="brand-name">PharmaStock</div>
+        <div class="brand-role">Inventory Controller</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="nav-section-label">Modules</p>
+
+      <a routerLink="/ic/dashboard" routerLinkActive="active"
+         [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
+        <span class="nav-icon">🏠</span><span>Dashboard</span>
+      </a>
+
+      <a routerLink="/ic/inventory-lots" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">📦</span><span>Inventory Lots</span>
+      </a>
+
+      <a routerLink="/ic/expiry-watch" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">⏰</span><span>Expiry Watch</span>
+      </a>
+
+      <a routerLink="/ic/transfer-orders" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">🔄</span><span>Transfer Orders</span>
+      </a>
+
+      <a routerLink="/ic/replenishment" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">🔁</span><span>Replenishment</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="logout-btn" (click)="logout()">
+        <span>🚪</span> Logout
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ── Main Content ───────────────────────────────── -->
+  <main class="content-area">
+    <router-outlet></router-outlet>
+  </main>
+
+</div>

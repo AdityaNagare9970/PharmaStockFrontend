@@ -1,14 +1,15 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 
-type RoleOption = {
-  value: string;
-  label: string;
-  route: string;
-  gradient: string;
-  btnGradient: string;
+// Maps normalised role strings → dashboard routes
+const ROLE_ROUTES: Record<string, string> = {
+  inventorycontroller:        '/ic/dashboard',
+  qualitycomplianceofficer:   '/qco/dashboard',
+  pharmacist:                 '/pharmacist/dashboard',
+  admin:                      '/admin/dashboard',
+  procurementofficer:         '/procurement/dashboard',
 };
 
 @Component({
@@ -41,32 +42,13 @@ type RoleOption = {
         <!-- Card -->
         <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
 
-          <!-- Colored role-selector header (inline style = always works) -->
-          <div class="px-8 py-5" [style.background]="selectedRole().gradient">
-            <label class="block text-white text-xs font-semibold uppercase tracking-widest mb-2 opacity-80">
-              Sign in as
-            </label>
-            <div class="relative">
-              <select
-                [value]="selectedRole().value"
-                (change)="onRoleChange($event)"
-                class="w-full appearance-none bg-white/20 text-white font-semibold text-sm rounded-xl px-4 py-2.5 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"
-              >
-                @for (role of roles; track role.value) {
-                  <option [value]="role.value" class="text-gray-800 bg-white font-medium">
-                    {{ role.label }}
-                  </option>
-                }
-              </select>
-              <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg class="w-4 h-4 text-white opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+          <!-- Card header strip -->
+          <div class="px-8 py-5" style="background: linear-gradient(to right, #0f172a, #1e293b)">
+            <h2 class="text-white font-semibold text-lg">Sign In</h2>
+            <p class="text-slate-400 text-xs mt-0.5">Enter your credentials to continue</p>
           </div>
 
-          <!-- Form body — white section -->
+          <!-- Form body -->
           <div class="px-8 py-7">
 
             @if (error()) {
@@ -81,7 +63,7 @@ type RoleOption = {
 
             <form (ngSubmit)="onSubmit()" #loginForm="ngForm" novalidate>
 
-              <!-- Username field -->
+              <!-- Username -->
               <div class="mb-4">
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Username</label>
                 <div class="relative">
@@ -98,13 +80,13 @@ type RoleOption = {
                     required
                     autocomplete="username"
                     placeholder="Enter your username"
-                    class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-300 transition-colors"
+                    class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
                   />
                 </div>
               </div>
 
-              <!-- Password field -->
-              <div class="mb-6">
+              <!-- Password -->
+              <div class="mb-7">
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
                 <div class="relative">
                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -120,17 +102,17 @@ type RoleOption = {
                     required
                     autocomplete="current-password"
                     placeholder="Enter your password"
-                    class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-300 transition-colors"
+                    class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
                   />
                 </div>
               </div>
 
-              <!-- Submit button -->
+              <!-- Submit -->
               <button
                 type="submit"
                 [disabled]="loading()"
                 class="w-full py-3 px-4 rounded-xl text-white font-semibold text-sm transition-all shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
-                [style.background]="selectedRole().btnGradient"
+                style="background: linear-gradient(to right, #0f172a, #1e293b)"
               >
                 @if (loading()) {
                   <span class="flex items-center justify-center gap-2">
@@ -138,7 +120,7 @@ type RoleOption = {
                     Signing in...
                   </span>
                 } @else {
-                  Sign In as {{ selectedRole().label }}
+                  Sign In
                 }
               </button>
 
@@ -156,62 +138,13 @@ type RoleOption = {
 export class UnifiedLoginComponent {
   username = '';
   password = '';
-  loading = signal(false);
-  error = signal('');
-
-  readonly roles: RoleOption[] = [
-    {
-      value: 'inventorycontroller',
-      label: 'Inventory Controller',
-      route: '/ic/dashboard',
-      gradient: 'linear-gradient(to right, #0f766e, #059669)',
-      btnGradient: 'linear-gradient(to right, #0f766e, #059669)',
-    },
-    {
-      value: 'qualitycomplianceofficer',
-      label: 'Quality & Compliance Officer',
-      route: '/qco/dashboard',
-      gradient: 'linear-gradient(to right, #7c3aed, #9333ea)',
-      btnGradient: 'linear-gradient(to right, #7c3aed, #9333ea)',
-    },
-    {
-      value: 'pharmacist',
-      label: 'Pharmacist',
-      route: '/pharmacist/dashboard',
-      gradient: 'linear-gradient(to right, #2563eb, #0891b2)',
-      btnGradient: 'linear-gradient(to right, #2563eb, #0891b2)',
-    },
-    {
-      value: 'admin',
-      label: 'Admin',
-      route: '/dashboard',
-      gradient: 'linear-gradient(to right, #374151, #4b5563)',
-      btnGradient: 'linear-gradient(to right, #374151, #4b5563)',
-    },
-    {
-      value: 'procurementofficer',
-      label: 'Procurement Officer',
-      route: '/procurement/dashboard',
-      gradient: 'linear-gradient(to right, #d97706, #ea580c)',
-      btnGradient: 'linear-gradient(to right, #d97706, #ea580c)',
-    },
-  ];
-
-  selectedRole = signal<RoleOption>(this.roles[0]);
+  loading  = signal(false);
+  error    = signal('');
 
   constructor(private authService: AuthService, private router: Router) {
-    const role = authService.getRole();
-    if (role && authService.isLoggedIn()) {
-      this.redirectByRole(role);
-    }
-  }
-
-  onRoleChange(event: Event) {
-    const val = (event.target as HTMLSelectElement).value;
-    const found = this.roles.find(r => r.value === val);
-    if (found) {
-      this.selectedRole.set(found);
-      this.error.set('');
+    // If already logged in, skip straight to the correct dashboard
+    if (authService.isLoggedIn()) {
+      this.redirectByRole(authService.getRole());
     }
   }
 
@@ -220,23 +153,26 @@ export class UnifiedLoginComponent {
       this.error.set('Please enter your username and password.');
       return;
     }
+
     this.loading.set(true);
     this.error.set('');
 
     this.authService.login({ username: this.username, password: this.password }).subscribe({
-      next: () => {
-        const rawRole = this.authService.getRole() ?? '';
-        const role = rawRole.toLowerCase().replace(/[\s_]/g, '');
-        const expected = this.selectedRole().value;
-        if (role === expected) {
-          this.router.navigate([this.selectedRole().route]);
+      next: (res) => {
+        // Save token and role from the response
+        this.authService.saveToken(res.token);
+        this.authService.saveRole(res.role);
+        localStorage.setItem('userId', res.userId.toString());
+
+        // Redirect based on the role that came back from the JWT
+        const role = res.role.toLowerCase().replace(/[\s_]/g, '');
+        const route = ROLE_ROUTES[role];
+
+        if (route) {
+          this.router.navigate([route]);
         } else {
-          // Logged in as wrong role — clear token and show error
-          this.authService.logout();
-          this.error.set(
-            `This account has the role "${rawRole}". Please select the matching role from the dropdown.`
-          );
-          this.loading.set(false);
+          // Unknown role — still logged in, send to generic dashboard
+          this.router.navigate(['/dashboard']);
         }
       },
       error: (err) => {
@@ -248,7 +184,7 @@ export class UnifiedLoginComponent {
 
   private redirectByRole(role: string) {
     const clean = role.toLowerCase().replace(/[\s_]/g, '');
-    const found = this.roles.find(r => r.value === clean);
-    if (found) this.router.navigate([found.route]);
+    const route = ROLE_ROUTES[clean] ?? '/dashboard';
+    this.router.navigate([route]);
   }
 }

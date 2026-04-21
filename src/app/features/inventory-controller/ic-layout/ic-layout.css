@@ -1,0 +1,52 @@
+/* ── Shell ──────────────────────────────────────────── */
+.shell { display: flex; min-height: 100vh; }
+
+/* ── Sidebar ─────────────────────────────────────────── */
+.sidebar {
+  width: 240px; min-width: 240px;
+  background: #0f172a;
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+
+.sidebar-brand {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.brand-icon { font-size: 1.75rem; line-height: 1; }
+.brand-name  { font-size: 0.95rem; font-weight: 700; color: #f1f5f9; letter-spacing: 0.01em; }
+.brand-role  { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 1px; }
+
+.sidebar-nav {
+  flex: 1; padding: 1rem 0.75rem;
+  display: flex; flex-direction: column; gap: 0.15rem;
+}
+.nav-section-label {
+  font-size: 0.65rem; font-weight: 600; color: #475569;
+  text-transform: uppercase; letter-spacing: 0.1em; margin: 0.5rem 0.5rem 0.5rem;
+}
+.nav-link {
+  display: flex; align-items: center; gap: 0.65rem;
+  padding: 0.6rem 0.75rem; border-radius: 0.5rem;
+  color: #94a3b8; text-decoration: none;
+  font-size: 0.875rem; font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-link:hover { background: rgba(255,255,255,0.06); color: #f1f5f9; }
+.nav-link.active { background: #0f766e; color: #ffffff; }
+.nav-icon { font-size: 1rem; width: 1.25rem; text-align: center; flex-shrink: 0; }
+
+.sidebar-footer { padding: 1rem 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); }
+.logout-btn {
+  display: flex; align-items: center; gap: 0.6rem;
+  width: 100%; padding: 0.6rem 0.75rem;
+  background: transparent; border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 0.5rem; color: #94a3b8;
+  font-size: 0.875rem; font-weight: 500; cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.logout-btn:hover { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+
+/* ── Content Area ────────────────────────────────────── */
+.content-area { flex: 1; min-width: 0; background: #f8fafc; overflow-y: auto; padding: 1.75rem 2rem; }

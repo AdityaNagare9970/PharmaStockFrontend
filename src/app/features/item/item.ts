@@ -124,7 +124,7 @@ export class ItemComponent implements OnInit {
 
   loadDrugs() {
     this.drugService.getAll().subscribe({
-      next:  (data) => this.drugs.set(data),
+      next:  (data) => this.drugs.set(data.items ?? (data as any)),
       error: () => {}
     });
   }

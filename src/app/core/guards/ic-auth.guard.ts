@@ -12,6 +12,6 @@ export const icAuthGuard: CanActivateFn = () => {
     return true;
   }
 
-  router.navigate(['/ic/login']);
+  router.navigate(['/login']);
   return false;
 };

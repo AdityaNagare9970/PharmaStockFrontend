@@ -3,13 +3,13 @@ import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/rou
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
-  selector: 'app-qco-layout',
+  selector: 'app-procurement-layout',
   standalone: true,
   imports: [RouterLink, RouterLinkActive, RouterOutlet],
-  templateUrl: './qco-layout.html',
-  styleUrl: './qco-layout.css',
+  templateUrl: './procurement-layout.html',
+  styleUrl: './procurement-layout.css',
 })
-export class QcoLayoutComponent {
+export class ProcurementLayoutComponent {
   constructor(private authService: AuthService, private router: Router) {}
 
   logout() {
