@@ -64,7 +64,8 @@ export const routes: Routes = [
   {
     path: 'admin',
     component: AdminLayout,
-    canActivate: [roleGuard('Admin')],
+    canActivate: [roleGuard],
+    data: { roles: ['admin'] },
     children: [
       { path: '',          component: AdminDashboard   },
       { path: 'locations', component: LocationComponent },
@@ -77,16 +78,16 @@ export const routes: Routes = [
   },
 
   // ── Procurement Officer ───────────────────────────────
-  { path: 'procurement', component: ProcurementDashboard, canActivate: [roleGuard('Procurement Officer')] },
+  { path: 'procurement', component: ProcurementDashboard, canActivate: [roleGuard], data: { roles: ['procurement officer'] } },
 
   // ── Inventory Controller ──────────────────────────────
-  { path: 'inventory', component: InventoryDashboard, canActivate: [roleGuard('Inventory Controller')] },
+  { path: 'inventory', component: InventoryDashboard, canActivate: [roleGuard], data: { roles: ['inventory controller'] } },
 
   // ── Quality Officer ───────────────────────────────────
-  { path: 'quality', component: QualityDashboard, canActivate: [roleGuard('Quality Officer')] },
+  { path: 'quality', component: QualityDashboard, canActivate: [roleGuard], data: { roles: ['quality officer'] } },
 
   // ── Pharmacist ────────────────────────────────────────
-  { path: 'pharmacist', component: PharmacistDashboard, canActivate: [roleGuard('Pharmacist')] },
+  { path: 'pharmacist', component: PharmacistDashboard, canActivate: [roleGuard], data: { roles: ['pharmacist'] } },
 
   // Fallback
   { path: '',   redirectTo: 'auth/login', pathMatch: 'full' },
