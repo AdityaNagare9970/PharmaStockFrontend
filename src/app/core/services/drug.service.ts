@@ -24,8 +24,14 @@ export class DrugService {
     };
   }
 
-  getAll() {
-    return this.http.get<any>(`${this.apiUrl}?PageSize=1000`).pipe(
+  getAll(filter?: { page?: number; pageSize?: number; genericName?: string; storageClass?: number; controlClass?: number; status?: boolean }) {
+    let params = `PageSize=${filter?.pageSize ?? 1000}`;
+    if (filter?.page)         params += `&Page=${filter.page}`;
+    if (filter?.genericName)  params += `&GenericName=${encodeURIComponent(filter.genericName)}`;
+    if (filter?.storageClass !== undefined) params += `&StorageClass=${filter.storageClass}`;
+    if (filter?.controlClass !== undefined) params += `&ControlClass=${filter.controlClass}`;
+    if (filter?.status       !== undefined) params += `&Status=${filter.status}`;
+    return this.http.get<any>(`${this.apiUrl}?${params}`).pipe(
       map(result => {
         const items: any[] = result.items ?? result.Items ?? result ?? [];
         return items.map(raw => this.normalize(raw));

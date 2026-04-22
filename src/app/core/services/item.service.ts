@@ -14,7 +14,7 @@ export class ItemService {
       itemId:           raw.itemId           ?? raw.ItemId           ?? 0,
       drugId:           raw.drugId           ?? raw.DrugId           ?? 0,
       packSize:         raw.packSize         ?? raw.PackSize         ?? null,
-      uoM:              raw.uoM              ?? raw.UoM              ?? raw.UOM ?? 0,
+      uoMId:            raw.uoMId            ?? raw.UoMId            ?? raw.uoM ?? raw.UoM ?? raw.UOM ?? 0,
       conversionToEach: raw.conversionToEach ?? raw.ConversionToEach ?? 0,
       barcode:          raw.barcode          ?? raw.Barcode          ?? '',
       status:           raw.status           ?? raw.Status           ?? false,

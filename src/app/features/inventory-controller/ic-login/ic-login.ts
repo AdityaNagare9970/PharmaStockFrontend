@@ -123,7 +123,7 @@ export class IcLoginComponent {
     private authService: AuthService,
     private router: Router
   ) {
-    if (authService.isLoggedIn() && authService.isInventoryController()) {
+    if (authService.isLoggedIn() && authService.hasRole('inventory controller')) {
       router.navigate(['/ic/dashboard']);
     }
   }
@@ -134,7 +134,7 @@ export class IcLoginComponent {
     this.authService.login(this.credentials).subscribe({
       next: () => {
         // Check role via the signal (which already decoded the JWT)
-        if (this.authService.isInventoryController()) {
+        if (this.authService.hasRole('inventory controller')) {
           this.router.navigate(['/ic/dashboard']);
         } else {
           const actualRole = this.authService.getRole();

@@ -158,7 +158,7 @@
                       <td class="fw-medium">{{ getDrugName(item.drugId) }}</td>
                       <td class="text-muted small">{{ item.barcode }}</td>
                       <td class="text-muted small">{{ item.packSize ?? '—' }}</td>
-                      <td class="text-muted small">{{ item.uoM }}</td>
+                      <td class="text-muted small">{{ item.uoMId }}</td>
                       <td class="text-muted small">{{ item.conversionToEach }}</td>
                       <td>
                         <span class="badge rounded-pill"
@@ -216,7 +216,7 @@
               <div class="col-6">
                 <label class="form-label fw-medium">UoM ID <span class="text-danger">*</span></label>
                 <input type="number" class="form-control" placeholder="e.g. 1"
-                  [(ngModel)]="newItem.uoM" name="uoM" min="1" required />
+                  [(ngModel)]="newItem.uoMId" name="uoMId" min="1" required />
               </div>
               <div class="col-6">
                 <label class="form-label fw-medium">Pack Size <span class="text-muted small fw-normal">(optional)</span></label>
@@ -281,7 +281,7 @@
               <div class="col-6">
                 <label class="form-label fw-medium">UoM ID <span class="text-danger">*</span></label>
                 <input type="number" class="form-control"
-                  [(ngModel)]="updateData.uoM" name="uoM" min="1" required />
+                  [(ngModel)]="updateData.uoMId" name="uoMId" min="1" required />
               </div>
               <div class="col-6">
                 <label class="form-label fw-medium">Pack Size <span class="text-muted small fw-normal">(optional)</span></label>

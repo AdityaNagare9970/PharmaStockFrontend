@@ -57,13 +57,13 @@ export class ItemComponent implements OnInit {
 
   // ── Add form ──────────────────────────────────────────
   newItem: CreateItem = {
-    drugId: 0, packSize: null, uoM: 0,
+    drugId: 0, packSize: null, uoMId: 0,
     conversionToEach: 1, barcode: '', status: true
   };
 
   // ── Update form ───────────────────────────────────────
   updateData: Item = {
-    itemId: 0, drugId: 0, packSize: null, uoM: 0,
+    itemId: 0, drugId: 0, packSize: null, uoMId: 0,
     conversionToEach: 1, barcode: '', status: true
   };
 
@@ -133,7 +133,7 @@ export class ItemComponent implements OnInit {
 
   addItem() {
     if (!this.newItem.drugId)              { this.errorMessage.set('Drug is required.'); return; }
-    if (!this.newItem.uoM)                 { this.errorMessage.set('Unit of measure is required.'); return; }
+    if (!this.newItem.uoMId)                 { this.errorMessage.set('Unit of measure is required.'); return; }
     if (!this.newItem.barcode.trim())      { this.errorMessage.set('Barcode is required.'); return; }
     if (this.newItem.conversionToEach <= 0) { this.errorMessage.set('Conversion to each must be greater than 0.'); return; }
 
@@ -144,7 +144,7 @@ export class ItemComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.successMessage.set(res.message || 'Item created successfully!');
-          this.newItem = { drugId: 0, packSize: null, uoM: 0, conversionToEach: 1, barcode: '', status: true };
+          this.newItem = { drugId: 0, packSize: null, uoMId: 0, conversionToEach: 1, barcode: '', status: true };
           this.loadAll();
           this.setView('list');
         },
@@ -162,7 +162,7 @@ export class ItemComponent implements OnInit {
 
   updateItem() {
     if (!this.updateData.drugId)               { this.errorMessage.set('Drug is required.'); return; }
-    if (!this.updateData.uoM)                  { this.errorMessage.set('Unit of measure is required.'); return; }
+    if (!this.updateData.uoMId)                  { this.errorMessage.set('Unit of measure is required.'); return; }
     if (!this.updateData.barcode.trim())       { this.errorMessage.set('Barcode is required.'); return; }
     if (this.updateData.conversionToEach <= 0) { this.errorMessage.set('Conversion to each must be greater than 0.'); return; }
 

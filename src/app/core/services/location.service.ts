@@ -5,7 +5,7 @@ import { Location, CreateLocation, UpdateLocation } from '../models/location.mod
 
 @Injectable({ providedIn: 'root' })
 export class LocationService {
-  private apiUrl = 'http://localhost:5259/api/v1/locations';
+  private apiUrl = 'http://localhost:5259/api/locations';
 
   constructor(private http: HttpClient) {}
 
@@ -32,14 +32,14 @@ export class LocationService {
   }
 
   create(data: CreateLocation) {
-    return this.http.post<Location>(`${this.apiUrl}/CreateLocation`, data);
+    return this.http.post<Location>(this.apiUrl, data);
   }
 
   update(locationId: number, data: UpdateLocation) {
-    return this.http.put(`${this.apiUrl}/UpdateLocation/${locationId}`, data);
+    return this.http.put(`${this.apiUrl}/${locationId}`, data);
   }
 
   delete(locationId: number) {
-    return this.http.delete(`${this.apiUrl}/DeleteLocation/${locationId}`);
+    return this.http.delete(`${this.apiUrl}/${locationId}`);
   }
 }

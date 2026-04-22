@@ -1,9 +1,9 @@
 export enum LocationTypeEnum {
-  MainStore = 20,
-  SubStore  = 21,
-  OR        = 22,
-  ICU       = 23,
-  Ward      = 24
+  MainStore = 1,
+  SubStore  = 2,
+  OR        = 3,
+  ICU       = 4,
+  Ward      = 5
 }
 
 export interface Location {

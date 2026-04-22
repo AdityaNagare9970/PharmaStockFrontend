@@ -6,11 +6,11 @@ import { LoginRequest } from '../../../core/models/auth.model';
 import { finalize } from 'rxjs';
 
 const ROLE_ROUTES: Record<string, string> = {
-  'Admin': '/admin',
-  'Procurement Officer': '/procurement',
-  'Inventory Controller': '/inventory',
-  'Quality Officer': '/quality',
-  'Pharmacist': '/pharmacist'
+  'admin': '/admin',
+  'procurementofficer': '/procurement',
+  'inventorycontroller': '/ic',
+  'qualityofficer': '/quality',
+  'pharmacist': '/pharmacist'
 };
 
 @Component({
@@ -25,9 +25,11 @@ export class Login {
   isLoading = signal(false);
 
   constructor(private authService: AuthService, private router: Router) {
-    // Already logged in → skip login page and go straight to dashboard
+    // Already logged in → redirect to role-specific dashboard
     if (authService.isLoggedIn()) {
-      router.navigate(['/dashboard']);
+      const role = authService.getRole().toLowerCase().replace(/\s+/g, '');
+      const route = ROLE_ROUTES[role] ?? '/dashboard';
+      router.navigate([route]);
     }
   }
 
@@ -46,8 +48,8 @@ export class Login {
         next: (res) => {
           this.authService.saveToken(res.token);
           this.authService.saveRole(res.role);
-          this.router.navigate(['/dashboard']);
-          const route = ROLE_ROUTES[res.role] ?? '/auth/login';
+          const role = res.role.toLowerCase().replace(/\s+/g, '');
+          const route = ROLE_ROUTES[role] ?? '/dashboard';
           this.router.navigate([route]);
         },
         error: (err) => {
