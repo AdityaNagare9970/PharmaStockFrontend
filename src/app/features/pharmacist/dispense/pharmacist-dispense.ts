@@ -46,7 +46,7 @@ import { DispenseRefDTO, CreateDispenseRefDTO, DestinationType } from '../../../
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Location ID</label>
                 <input
                   type="number"
-                  [value]="myLocationId"
+                  [value]="1"
                   disabled
                   class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
                 />
@@ -247,10 +247,8 @@ export class PharmacistDispenseComponent implements OnInit {
   creating = signal(false);
   createError = signal('');
 
-  myLocationId = 1;
-
   newDispense: CreateDispenseRefDTO = {
-    locationId: this.myLocationId,
+    locationId: 1,
     itemId: 0,
     inventoryLotId: 0,
     quantity: 0,
@@ -285,7 +283,7 @@ export class PharmacistDispenseComponent implements OnInit {
   loadData() {
     this.loading.set(true);
     this.error.set('');
-    this.pharmacistService.getDispenseRecords(this.myLocationId).subscribe({
+    this.pharmacistService.getDispenseRecords().subscribe({
       next: (data) => {
         this.records.set(data);
         this.loading.set(false);
@@ -299,7 +297,7 @@ export class PharmacistDispenseComponent implements OnInit {
 
   openModal() {
     this.newDispense = {
-      locationId: this.myLocationId,
+      locationId: 1,
       itemId: 0,
       inventoryLotId: 0,
       quantity: 0,

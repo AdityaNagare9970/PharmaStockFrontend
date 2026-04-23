@@ -146,8 +146,6 @@ export class PharmacistStockComponent implements OnInit {
   error = signal('');
   searchTerm = signal('');
 
-  myLocationId = 1;
-
   filteredItems = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     if (!term) return this.items();
@@ -175,7 +173,7 @@ export class PharmacistStockComponent implements OnInit {
   loadData() {
     this.loading.set(true);
     this.error.set('');
-    this.pharmacistService.getInventoryByLocation(this.myLocationId).subscribe({
+    this.pharmacistService.getInventoryByLocation().subscribe({
       next: (data) => {
         this.items.set(data);
         this.loading.set(false);

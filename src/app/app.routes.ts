@@ -10,8 +10,12 @@ import { Shell } from './features/shell/shell';
 
 import { AdminLayout } from './features/admin/admin-layout';
 import { AdminDashboard } from './features/admin/admin-dashboard';
-import { ProcurementDashboard } from './features/procurement/procurement-dashboard';
-import { QualityDashboard } from './features/quality/quality-dashboard';
+import { ProcurementLayoutComponent } from './features/procurement/procurement-layout/procurement-layout';
+import { QualityLayoutComponent } from './features/quality/quality-layout/quality-layout';
+import { QualityDashboardNewComponent } from './features/quality/dashboard/quality-dashboard-new';
+import { ColdChainComponent } from './features/quality/cold-chain/cold-chain';
+import { RecallsComponent } from './features/quality/recalls/recalls';
+import { QuarantineComponent } from './features/quality/quarantine/quarantine';
 
 import { IcLayoutComponent } from './features/inventory-controller/ic-layout/ic-layout';
 import { IcDashboardComponent } from './features/inventory-controller/dashboard/ic-dashboard';
@@ -89,7 +93,19 @@ export const routes: Routes = [
   },
 
   // ── Procurement Officer ───────────────────────────────
-  { path: 'procurement', component: ProcurementDashboard, canActivate: [roleGuard], data: { roles: ['procurementofficer'] } },
+  {
+    path: 'procurement',
+    component: ProcurementLayoutComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['procurementofficer'] },
+    children: [
+      { path: '',                redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard',       component: Dashboard                        },
+      { path: 'vendors',         component: VendorComponent                  },
+      { path: 'purchase-orders', component: PurchaseOrderComponent           },
+      { path: 'goods-receipt',   component: PurchaseItemComponent            },
+    ]
+  },
 
   // ── Inventory Controller ──────────────────────────────
   {
@@ -108,7 +124,20 @@ export const routes: Routes = [
   },
 
   // ── Quality Officer ───────────────────────────────────
-  { path: 'quality', component: QualityDashboard, canActivate: [roleGuard], data: { roles: ['qualityofficer'] } },
+  {
+    path: 'quality',
+    component: QualityLayoutComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['qualityofficer'] },
+    children: [
+      { path: '',            redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard',   component: QualityDashboardNewComponent  },
+      { path: 'cold-chain',  component: ColdChainComponent            },
+      { path: 'recalls',     component: RecallsComponent              },
+      { path: 'quarantine',  component: QuarantineComponent           },
+      { path: 'audit',       component: AuditComponent                },
+    ]
+  },
 
   // ── Pharmacist ────────────────────────────────────────
   {

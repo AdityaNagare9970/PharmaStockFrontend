@@ -187,8 +187,6 @@ export class IncomingTransfersComponent implements OnInit {
   confirmingId = signal<number | null>(null);
   confirmError = signal('');
 
-  myLocationId = 1;
-
   filteredTransfers = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     if (!term) return this.transfers();
@@ -211,7 +209,7 @@ export class IncomingTransfersComponent implements OnInit {
   loadData() {
     this.loading.set(true);
     this.error.set('');
-    this.pharmacistService.getIncomingTransfers(this.myLocationId).subscribe({
+    this.pharmacistService.getIncomingTransfers().subscribe({
       next: (data) => {
         this.transfers.set(data);
         this.loading.set(false);

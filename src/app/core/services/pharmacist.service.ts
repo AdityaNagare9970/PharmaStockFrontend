@@ -17,18 +17,18 @@ export class PharmacistService {
   constructor(private http: HttpClient) {}
 
   // Dashboard
-  getDashboardStats(locationId: number) {
-    return this.http.get<PharmacistDashboardStats>(`${this.BASE}/pharmacist-dashboard/stats?locationId=${locationId}`);
+  getDashboardStats() {
+    return this.http.get<PharmacistDashboardStats>(`${this.BASE}/pharmacist-dashboard/stats`);
   }
 
   // Inventory at location
-  getInventoryByLocation(locationId: number) {
-    return this.http.get<InventoryBalance[]>(`${this.BASE}/pharmacist-inventory?locationId=${locationId}`);
+  getInventoryByLocation() {
+    return this.http.get<InventoryBalance[]>(`${this.BASE}/pharmacist-inventory`);
   }
 
-  // Incoming transfers (transfers where toLocationId = locationId)
-  getIncomingTransfers(locationId: number) {
-    return this.http.get<IncomingTransferDTO[]>(`${this.BASE}/pharmacist-transfer/incoming?locationId=${locationId}`);
+  // Incoming transfers
+  getIncomingTransfers() {
+    return this.http.get<IncomingTransferDTO[]>(`${this.BASE}/pharmacist-transfer/incoming`);
   }
 
   confirmTransfer(transferOrderId: number) {
@@ -36,8 +36,8 @@ export class PharmacistService {
   }
 
   // Dispense
-  getDispenseRecords(locationId: number) {
-    return this.http.get<DispenseRefDTO[]>(`${this.BASE}/dispense?locationId=${locationId}`);
+  getDispenseRecords() {
+    return this.http.get<DispenseRefDTO[]>(`${this.BASE}/dispense`);
   }
 
   createDispense(dto: CreateDispenseRefDTO) {

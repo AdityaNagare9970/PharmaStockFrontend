@@ -172,8 +172,6 @@ export class PharmacistExpiryComponent implements OnInit {
   searchTerm = signal('');
   selectedDays = 90;
 
-  myLocationId = 1;
-
   filteredItems = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     if (!term) return this.items();

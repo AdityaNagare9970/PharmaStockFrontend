@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -208,9 +208,10 @@ export class IcLayoutComponent {
   readonly inactiveClass =
     'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-teal-200 hover:bg-teal-700 hover:text-white transition-colors';
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   logout() {
     this.authService.logout();
+    this.router.navigate(['/auth/login']);
   }
 }

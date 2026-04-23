@@ -1,9 +1,3 @@
-<!-- ── Top Bar ─────────────────────────────────────────────────────────────── -->
-<div class="page-topbar">
-  <h2 class="page-title">Procurement Officer </h2>
-  <button class="btn-logout" (click)="logout()">Logout</button>
-</div>
-
 <!-- ── Body ──────────────────────────────────────────────────────────────── -->
 <div class="page-body">
 
@@ -31,7 +25,7 @@
           <div class="stat-label">Total Vendors</div>
           <div class="stat-sub">{{ activeVendors() }} active</div>
         </div>
-        <a routerLink="/vendors" class="stat-link">Manage &rarr;</a>
+        <a routerLink="/procurement/vendors" class="stat-link">Manage &rarr;</a>
       </div>
 
       <!-- Open POs -->
@@ -47,7 +41,7 @@
           <div class="stat-label">Open Purchase Orders</div>
           <div class="stat-sub">{{ totalPOs() }} total POs</div>
         </div>
-        <a routerLink="/purchase-orders" class="stat-link">View POs &rarr;</a>
+        <a routerLink="/procurement/purchase-orders" class="stat-link">View POs &rarr;</a>
       </div>
 
       <!-- Due Receipts -->
@@ -63,7 +57,7 @@
           <div class="stat-label">Due Receipts</div>
           <div class="stat-sub">Expected today or earlier</div>
         </div>
-        <a routerLink="/purchase-orders" class="stat-link">Review &rarr;</a>
+        <a routerLink="/procurement/purchase-orders" class="stat-link">Review &rarr;</a>
       </div>
 
       <!-- Pricing / Terms -->
@@ -78,7 +72,7 @@
           <div class="stat-label">Purchase Items</div>
           <div class="stat-sub">Total value: ${{ formatCurrency(totalItemValue()) }}</div>
         </div>
-        <a routerLink="/purchase-items" class="stat-link">View Items &rarr;</a>
+        <a routerLink="/procurement/goods-receipt" class="stat-link">View Items &rarr;</a>
       </div>
 
     </div>
@@ -86,17 +80,17 @@
     <!-- ── Quick Actions ────────────────────────────────────────────────── -->
     <div class="section-title">Quick Actions</div>
     <div class="quick-grid">
-      <a routerLink="/vendors" class="quick-card">
+      <a routerLink="/procurement/vendors" class="quick-card">
         <span class="quick-icon">🏢</span>
         <span class="quick-label">Vendors</span>
         <span class="quick-desc">Manage suppliers &amp; contacts</span>
       </a>
-      <a routerLink="/purchase-orders" class="quick-card">
+      <a routerLink="/procurement/purchase-orders" class="quick-card">
         <span class="quick-icon">📋</span>
         <span class="quick-label">Purchase Orders</span>
         <span class="quick-desc">Create &amp; track orders</span>
       </a>
-      <a routerLink="/purchase-items" class="quick-card">
+      <a routerLink="/procurement/goods-receipt" class="quick-card">
         <span class="quick-icon">📦</span>
         <span class="quick-label">Purchase Items</span>
         <span class="quick-desc">Pricing &amp; order line items</span>
@@ -130,7 +124,7 @@
           </tbody>
         </table>
         <div class="mini-footer">
-          <a routerLink="/purchase-orders" class="view-all-link">View all purchase orders &rarr;</a>
+          <a routerLink="/procurement/purchase-orders" class="view-all-link">View all purchase orders &rarr;</a>
         </div>
       </div>
     }

@@ -189,8 +189,6 @@ export class PharmacistDashboardComponent implements OnInit {
   loading = signal(true);
   error = signal('');
 
-  myLocationId = 1;
-
   constructor(private pharmacistService: PharmacistService) {}
 
   ngOnInit() {
@@ -200,7 +198,7 @@ export class PharmacistDashboardComponent implements OnInit {
   loadStats() {
     this.loading.set(true);
     this.error.set('');
-    this.pharmacistService.getDashboardStats(this.myLocationId).subscribe({
+    this.pharmacistService.getDashboardStats().subscribe({
       next: (data) => {
         this.stats.set(data);
         this.loading.set(false);
