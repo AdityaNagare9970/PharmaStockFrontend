@@ -60,14 +60,13 @@
                 <th class="text-muted small fw-semibold text-center">MIN</th>
                 <th class="text-muted small fw-semibold text-center">PAR</th>
                 <th class="text-muted small fw-semibold text-center">MAX</th>
-                <th class="text-muted small fw-semibold">REVIEW CYCLE</th>
                 <th class="text-muted small fw-semibold">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
               @if (filteredRules().length === 0) {
                 <tr>
-                  <td colspan="8" class="text-center text-muted py-5">
+                  <td colspan="7" class="text-center text-muted py-5">
                     @if (searchTerm()) { No rules match your search. }
                     @else { No replenishment rules found. Click <strong>+ Add Rule</strong> to create one. }
                   </td>
@@ -85,11 +84,6 @@
                       <span class="badge bg-primary">{{ rule.parLevel }}</span>
                     </td>
                     <td class="text-center text-muted small">{{ rule.maxLevel }}</td>
-                    <td>
-                      <span [class]="rule.reviewCycle ? 'badge bg-success' : 'badge bg-secondary'">
-                        {{ rule.reviewCycle ? 'Active' : 'Off' }}
-                      </span>
-                    </td>
                     <td>
                       <button class="btn btn-sm btn-outline-primary me-1" (click)="openEdit(rule)">Edit</button>
                       <button class="btn btn-sm btn-outline-danger" (click)="confirmDelete(rule.replenishmentRuleId)">Delete</button>
@@ -161,13 +155,6 @@
                   [(ngModel)]="formMaxLevel" name="maxLevel" required min="1" />
               </div>
 
-              <div class="col-12">
-                <label class="form-label fw-semibold small">Review Cycle</label>
-                <select class="form-select form-select-sm" [(ngModel)]="formReviewCycle" name="reviewCycle">
-                  <option [ngValue]="true">Active</option>
-                  <option [ngValue]="false">Off</option>
-                </select>
-              </div>
             </div>
 
             @if (errorMessage()) {

@@ -17,7 +17,6 @@ export class ItemService {
       uoMId:            raw.uoMId            ?? raw.UoMId            ?? raw.uoM ?? raw.UoM ?? raw.UOM ?? 0,
       conversionToEach: raw.conversionToEach ?? raw.ConversionToEach ?? 0,
       barcode:          raw.barcode          ?? raw.Barcode          ?? '',
-      status:           raw.status           ?? raw.Status           ?? false,
     };
   }
 
@@ -44,4 +43,5 @@ export class ItemService {
   delete(itemId: number) {
     return this.http.delete<ItemActionResponse>(`${this.apiUrl}/DeleteItem/${itemId}`);
   }
+
 }

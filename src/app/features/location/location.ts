@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LocationService } from '../../core/services/location.service';
-import { Location, LocationTypeEnum, CreateLocation, UpdateLocation } from '../../core/models/location.model';
+import { Location, CreateLocation, UpdateLocation } from '../../core/models/location.model';
 import { finalize } from 'rxjs';
 
 type ActiveView = 'list' | 'add' | 'update';
@@ -24,10 +24,8 @@ export class LocationComponent implements OnInit {
   filterStatus = signal<StatusFilter>('all');
   filterParent = signal<number | 'none' | ''>('');
 
-  // ── Enum entries exposed to template ─────────────────
-  readonly locationTypeEntries = Object.entries(LocationTypeEnum)
-    .filter(([, v]) => typeof v === 'number')
-    .map(([name, id]) => ({ id: id as number, name }));
+  // ── Location types loaded from API ───────────────────
+  locationTypeEntries = signal<{ id: number; name: string }[]>([]);
 
   // ── Parent options (top-level locations only for parent select) ──
   parentOptions = computed(() =>
@@ -88,12 +86,20 @@ export class LocationComponent implements OnInit {
 
   ngOnInit() {
     this.loadAll();
+    this.loadTypes();
+  }
+
+  loadTypes() {
+    this.locationService.getTypes().subscribe({
+      next: (types) => this.locationTypeEntries.set(types.map(t => ({ id: t.locationTypeId, name: t.type }))),
+      error: () => this.errorMessage.set('Failed to load location types.')
+    });
   }
 
   // ── Helpers ──────────────────────────────────────────
 
   getTypeName(typeId: number): string {
-    return LocationTypeEnum[typeId] ?? `Type ${typeId}`;
+    return this.locationTypeEntries().find(t => t.id === typeId)?.name ?? `Type ${typeId}`;
   }
 
   getParentName(parentId: number | null): string {

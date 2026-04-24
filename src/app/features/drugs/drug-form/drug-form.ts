@@ -149,18 +149,6 @@ import { SidebarComponent } from '../../../shared/sidebar/sidebar';
                   </div>
                 </div>
 
-                <!-- Row 4: Status -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select
-                    formControlName="status"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                  >
-                    <option value="true">Active</option>
-                    <option value="false">Inactive</option>
-                  </select>
-                </div>
-
                 <!-- Actions -->
                 <div class="flex items-center gap-3 pt-2 border-t border-gray-100">
                   <button
@@ -217,7 +205,6 @@ export class DrugFormComponent implements OnInit {
       form: [null],
       storageClass: [null],
       controlClass: [null],
-      status: ['true'],
     });
   }
 
@@ -236,7 +223,6 @@ export class DrugFormComponent implements OnInit {
       next: (drug) => {
         this.drugForm.patchValue({
           ...drug,
-          status: drug.status ? 'true' : 'false',
         });
         this.loadingDrug.set(false);
       },
@@ -261,7 +247,6 @@ export class DrugFormComponent implements OnInit {
     const raw = this.drugForm.value;
     const dto = {
       ...raw,
-      status: raw.status === 'true',
       form: raw.form ? Number(raw.form) : null,
       storageClass: raw.storageClass ? Number(raw.storageClass) : null,
       controlClass: raw.controlClass ? Number(raw.controlClass) : null,

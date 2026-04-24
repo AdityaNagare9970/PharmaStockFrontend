@@ -5,7 +5,6 @@ export interface Item {
   uoMId: number;
   conversionToEach: number;
   barcode: string;
-  status: boolean;
 }
 
 export interface CreateItem {
@@ -14,7 +13,6 @@ export interface CreateItem {
   uoMId: number;
   conversionToEach: number;
   barcode: string;
-  status: boolean;
 }
 
 export interface ItemCreateResponse {

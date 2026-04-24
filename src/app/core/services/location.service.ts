@@ -42,4 +42,8 @@ export class LocationService {
   delete(locationId: number) {
     return this.http.delete(`${this.apiUrl}/${locationId}`);
   }
+
+  getTypes() {
+    return this.http.get<{ locationTypeId: number; type: string }[]>(`${this.apiUrl}/types`);
+  }
 }

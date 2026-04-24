@@ -2,10 +2,10 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { DrugService } from '../../core/services/drug.service';
+import { LookupService, LookupEntry } from '../../core/services/lookup.service';
 import { Drug, CreateDrug } from '../../core/models/drug.model';
 
 type ActiveView = 'list' | 'add' | 'update';
-type StatusFilter = 'all' | 'active' | 'inactive';
 
 @Component({
   selector: 'app-drug',
@@ -18,31 +18,16 @@ export class DrugComponent implements OnInit {
   activeView = signal<ActiveView>('list');
   drugs      = signal<Drug[]>([]);
 
+  // ── Lookup signals ────────────────────────────────────
+  drugForms      = signal<LookupEntry[]>([]);
+  controlClasses = signal<LookupEntry[]>([]);
+  storageClasses = signal<LookupEntry[]>([]);
+
   // ── Filter signals ────────────────────────────────────
   searchQuery      = signal('');
   filterForm       = signal<number | ''>('');
   filterControl    = signal<number | ''>('');
   filterStorage    = signal<number | ''>('');
-  filterStatus     = signal<StatusFilter>('all');
-
-  // ── Derived: unique lookup values from loaded drugs ───
-  uniqueForms = computed(() => {
-    const seen = new Set<number>();
-    return this.drugs().filter(d => { const ok = !seen.has(d.form); seen.add(d.form); return ok; })
-      .map(d => d.form).sort((a, b) => a - b);
-  });
-
-  uniqueControlClasses = computed(() => {
-    const seen = new Set<number>();
-    return this.drugs().filter(d => { const ok = !seen.has(d.controlClass); seen.add(d.controlClass); return ok; })
-      .map(d => d.controlClass).sort((a, b) => a - b);
-  });
-
-  uniqueStorageClasses = computed(() => {
-    const seen = new Set<number>();
-    return this.drugs().filter(d => { const ok = !seen.has(d.storageClass); seen.add(d.storageClass); return ok; })
-      .map(d => d.storageClass).sort((a, b) => a - b);
-  });
 
   // ── Filtered result ───────────────────────────────────
   filteredDrugs = computed(() => {
@@ -66,10 +51,6 @@ export class DrugComponent implements OnInit {
     const stor = this.filterStorage();
     if (stor !== '') result = result.filter(d => d.storageClass === stor);
 
-    const status = this.filterStatus();
-    if (status === 'active')   result = result.filter(d =>  d.status);
-    if (status === 'inactive') result = result.filter(d => !d.status);
-
     return result;
   });
 
@@ -77,20 +58,19 @@ export class DrugComponent implements OnInit {
     this.searchQuery()   !== '' ||
     this.filterForm()    !== '' ||
     this.filterControl() !== '' ||
-    this.filterStorage() !== '' ||
-    this.filterStatus()  !== 'all'
+    this.filterStorage() !== ''
   );
 
   // ── Add form ──────────────────────────────────────────
   newDrug: CreateDrug = {
     genericName: '', brandName: '', strength: '',
-    form: 0, atccode: '', controlClass: 0, storageClass: 0, status: true
+    form: 0, atccode: '', controlClass: 0, storageClass: 0
   };
 
   // ── Update form ───────────────────────────────────────
   updateData: Drug = {
     drugId: 0, genericName: '', brandName: '', strength: '',
-    form: 0, atccode: '', controlClass: 0, storageClass: 0, status: true
+    form: 0, atccode: '', controlClass: 0, storageClass: 0
   };
 
   // ── Delete confirmation ───────────────────────────────
@@ -102,20 +82,35 @@ export class DrugComponent implements OnInit {
   isLoading      = signal(false);
   isDeleting     = signal(false);
 
-  constructor(private drugService: DrugService) {}
+  constructor(
+    private drugService: DrugService,
+    private lookupService: LookupService
+  ) {}
 
   ngOnInit() {
     this.loadAll();
+    this.loadLookups();
   }
 
   // ── Helpers ──────────────────────────────────────────
+
+  getFormName(id: number): string {
+    return this.drugForms().find(e => e.id === id)?.name ?? `Form ${id}`;
+  }
+
+  getControlClassName(id: number): string {
+    return this.controlClasses().find(e => e.id === id)?.name ?? `Class ${id}`;
+  }
+
+  getStorageClassName(id: number): string {
+    return this.storageClasses().find(e => e.id === id)?.name ?? `Class ${id}`;
+  }
 
   clearFilters() {
     this.searchQuery.set('');
     this.filterForm.set('');
     this.filterControl.set('');
     this.filterStorage.set('');
-    this.filterStatus.set('all');
   }
 
   clearMessages() {
@@ -126,6 +121,23 @@ export class DrugComponent implements OnInit {
   setView(view: ActiveView) {
     this.activeView.set(view);
     this.clearMessages();
+  }
+
+  // ── Load Lookups ─────────────────────────────────────
+
+  loadLookups() {
+    this.lookupService.getDrugForms().subscribe({
+      next: (data) => this.drugForms.set(data),
+      error: () => this.errorMessage.set('Failed to load drug forms.')
+    });
+    this.lookupService.getControlClasses().subscribe({
+      next: (data) => this.controlClasses.set(data),
+      error: () => this.errorMessage.set('Failed to load control classes.')
+    });
+    this.lookupService.getDrugStorageClasses().subscribe({
+      next: (data) => this.storageClasses.set(data),
+      error: () => this.errorMessage.set('Failed to load storage classes.')
+    });
   }
 
   // ── Load All ─────────────────────────────────────────
@@ -157,7 +169,7 @@ export class DrugComponent implements OnInit {
       .subscribe({
         next: () => {
           this.successMessage.set('Drug created successfully!');
-          this.newDrug = { genericName: '', brandName: '', strength: '', form: 0, atccode: '', controlClass: 0, storageClass: 0, status: true };
+          this.newDrug = { genericName: '', brandName: '', strength: '', form: 0, atccode: '', controlClass: 0, storageClass: 0 };
           this.loadAll();
           this.setView('list');
         },

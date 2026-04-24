@@ -53,19 +53,6 @@ import { Drug } from '../../../core/models/drug.model';
                   />
                 </div>
 
-                <!-- Status filter -->
-                <div class="w-36">
-                  <label class="block text-xs font-medium text-gray-600 mb-1">Status</label>
-                  <select
-                    [(ngModel)]="filterStatus"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  >
-                    <option value="">All</option>
-                    <option value="true">Active</option>
-                    <option value="false">Inactive</option>
-                  </select>
-                </div>
-
                 <!-- Storage Class filter -->
                 <div class="w-36">
                   <label class="block text-xs font-medium text-gray-600 mb-1">Storage Class</label>
@@ -118,11 +105,6 @@ import { Drug } from '../../../core/models/drug.model';
                   @if (filterGenericName) {
                     <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                       Name: {{ filterGenericName }}
-                    </span>
-                  }
-                  @if (filterStatus !== '') {
-                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Status: {{ filterStatus === 'true' ? 'Active' : 'Inactive' }}
                     </span>
                   }
                   @if (filterStorageClass) {
@@ -179,7 +161,6 @@ import { Drug } from '../../../core/models/drug.model';
                       <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Brand Name</th>
                       <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Strength</th>
                       <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">ATC Code</th>
-                      <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
                       <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
                     </tr>
                   </thead>
@@ -191,13 +172,6 @@ import { Drug } from '../../../core/models/drug.model';
                         <td class="px-6 py-4 text-gray-600">{{ drug.brandName }}</td>
                         <td class="px-6 py-4 text-gray-600">{{ drug.strength }}</td>
                         <td class="px-6 py-4 text-gray-600 font-mono text-xs">{{ drug.atccode }}</td>
-                        <td class="px-6 py-4">
-                          @if (drug.status) {
-                            <span class="inline-flex px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Active</span>
-                          } @else {
-                            <span class="inline-flex px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-medium">Inactive</span>
-                          }
-                        </td>
                         <td class="px-6 py-4">
                           <div class="flex items-center gap-2">
                             <a [routerLink]="['/drugs/edit', drug.drugId]"
@@ -320,7 +294,6 @@ export class DrugListComponent implements OnInit {
 
   // Filter state (bound via ngModel)
   filterGenericName = '';
-  filterStatus = '';
   filterStorageClass: number | null = null;
   filterControlClass: number | null = null;
 
@@ -330,7 +303,7 @@ export class DrugListComponent implements OnInit {
   rangeEnd = computed(() => Math.min(this.currentPage() * this.pageSize(), this.totalCount()));
 
   hasActiveFilters = computed(() =>
-    !!this.filterGenericName || this.filterStatus !== '' ||
+    !!this.filterGenericName ||
     !!this.filterStorageClass || !!this.filterControlClass
   );
 
@@ -368,7 +341,6 @@ export class DrugListComponent implements OnInit {
     if (this.filterGenericName)   filter.genericName   = this.filterGenericName;
     if (this.filterStorageClass)  filter.storageClass  = this.filterStorageClass;
     if (this.filterControlClass)  filter.controlClass  = this.filterControlClass;
-    if (this.filterStatus !== '') filter.status        = this.filterStatus === 'true';
 
     this.drugService.getAll(filter).subscribe({
       next: (result: any) => {
@@ -390,7 +362,6 @@ export class DrugListComponent implements OnInit {
 
   clearFilters() {
     this.filterGenericName = '';
-    this.filterStatus = '';
     this.filterStorageClass = null;
     this.filterControlClass = null;
     this.currentPage.set(1);

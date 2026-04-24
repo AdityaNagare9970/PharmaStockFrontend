@@ -1,11 +1,3 @@
-export enum LocationTypeEnum {
-  MainStore = 1,
-  SubStore  = 2,
-  OR        = 3,
-  ICU       = 4,
-  Ward      = 5
-}
-
 export interface Location {
   locationId: number;
   name: string;
