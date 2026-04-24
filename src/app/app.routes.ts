@@ -30,6 +30,7 @@ import { PharmacistStockComponent } from './features/pharmacist/stock/pharmacist
 import { PharmacistExpiryComponent } from './features/pharmacist/expiry/pharmacist-expiry';
 import { IncomingTransfersComponent } from './features/pharmacist/transfers/incoming-transfers';
 import { PharmacistDispenseComponent } from './features/pharmacist/dispense/pharmacist-dispense';
+import { GrnComponent } from './features/pharmacist/grn/grn';
 
 import { LocationComponent } from './features/location/location';
 import { UserComponent } from './features/user/user';
@@ -37,6 +38,7 @@ import { BinComponent } from './features/bin/bin';
 import { DrugComponent } from './features/drug/drug';
 import { ItemComponent } from './features/item/item';
 import { AuditComponent } from './features/audit/audit';
+import { ReplenishmentRulesComponent } from './features/admin/replenishment-rules/replenishment-rules';
 
 import { roleGuard } from './core/guards/role.guard';
 
@@ -88,7 +90,8 @@ export const routes: Routes = [
       { path: 'bins',      component: BinComponent      },
       { path: 'drugs',     component: DrugComponent     },
       { path: 'items',     component: ItemComponent     },
-      { path: 'audit',     component: AuditComponent    },
+      { path: 'audit',                component: AuditComponent              },
+      { path: 'replenishment-rules',  component: ReplenishmentRulesComponent },
     ]
   },
 
@@ -152,6 +155,7 @@ export const routes: Routes = [
       { path: 'expiry',    component: PharmacistExpiryComponent    },
       { path: 'transfers', component: IncomingTransfersComponent   },
       { path: 'dispense',  component: PharmacistDispenseComponent  },
+      { path: 'grn',       component: GrnComponent                 },
     ]
   },
 

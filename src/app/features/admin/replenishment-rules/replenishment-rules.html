@@ -1,0 +1,220 @@
+<div class="min-vh-100 bg-light">
+
+  <!-- Header -->
+  <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center gap-2">
+    <span class="fs-5">🔁</span>
+    <h5 class="mb-0 fw-bold text-primary">Replenishment Rules</h5>
+  </div>
+
+  <div class="container-fluid px-4 py-4">
+
+    <!-- Feedback -->
+    @if (successMessage()) {
+      <div class="alert alert-success d-flex align-items-center gap-2 py-2 mb-3">
+        ✅ {{ successMessage() }}
+      </div>
+    }
+    @if (errorMessage() && !showModal() && !showDeleteModal()) {
+      <div class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-3">
+        ❌ {{ errorMessage() }}
+      </div>
+    }
+
+    <!-- Search + Add -->
+    <div class="card border-0 shadow-sm mb-3 p-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-8">
+          <label class="form-label small fw-semibold text-muted mb-1">Search</label>
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Search by item or location..."
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+          />
+        </div>
+        <div class="col-md-4 d-flex gap-2 justify-content-md-end">
+          @if (searchTerm()) {
+            <button class="btn btn-sm btn-outline-secondary" (click)="searchTerm.set('')">Clear</button>
+          }
+          <button class="btn btn-sm btn-primary fw-semibold" (click)="openAdd()">+ Add Rule</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card border-0 shadow-sm">
+      @if (isLoading()) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2 text-muted small">Loading rules...</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="text-muted small fw-semibold">#</th>
+                <th class="text-muted small fw-semibold">ITEM</th>
+                <th class="text-muted small fw-semibold">LOCATION</th>
+                <th class="text-muted small fw-semibold text-center">MIN</th>
+                <th class="text-muted small fw-semibold text-center">PAR</th>
+                <th class="text-muted small fw-semibold text-center">MAX</th>
+                <th class="text-muted small fw-semibold">REVIEW CYCLE</th>
+                <th class="text-muted small fw-semibold">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (filteredRules().length === 0) {
+                <tr>
+                  <td colspan="8" class="text-center text-muted py-5">
+                    @if (searchTerm()) { No rules match your search. }
+                    @else { No replenishment rules found. Click <strong>+ Add Rule</strong> to create one. }
+                  </td>
+                </tr>
+              } @else {
+                @for (rule of filteredRules(); track rule.replenishmentRuleId; let i = $index) {
+                  <tr>
+                    <td class="text-muted small">{{ i + 1 }}</td>
+                    <td class="fw-semibold">{{ rule.itemName || ('Item #' + rule.itemId) }}</td>
+                    <td class="text-muted small">{{ rule.locationName || ('Location #' + rule.locationId) }}</td>
+                    <td class="text-center">
+                      <span class="badge bg-warning text-dark">{{ rule.minLevel }}</span>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-primary">{{ rule.parLevel }}</span>
+                    </td>
+                    <td class="text-center text-muted small">{{ rule.maxLevel }}</td>
+                    <td>
+                      <span [class]="rule.reviewCycle ? 'badge bg-success' : 'badge bg-secondary'">
+                        {{ rule.reviewCycle ? 'Active' : 'Off' }}
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary me-1" (click)="openEdit(rule)">Edit</button>
+                      <button class="btn btn-sm btn-outline-danger" (click)="confirmDelete(rule.replenishmentRuleId)">Delete</button>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (filteredRules().length > 0) {
+          <div class="px-3 py-2 border-top text-muted small">
+            {{ filteredRules().length }} of {{ rules().length }} rules
+          </div>
+        }
+      }
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Add / Edit Modal ── -->
+@if (showModal()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">{{ isEditing() ? 'Edit Rule' : 'Add Replenishment Rule' }}</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveRule()" #ruleForm="ngForm">
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label fw-semibold small">Item <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm" [(ngModel)]="formItemId" name="itemId" required [disabled]="isEditing()">
+                  <option [value]="0" disabled>— Select item —</option>
+                  @for (item of items(); track item.itemId) {
+                    <option [value]="item.itemId">{{ item.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold small">Location <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm" [(ngModel)]="formLocationId" name="locationId" required [disabled]="isEditing()">
+                  <option [value]="0" disabled>— Select location —</option>
+                  @for (loc of locations(); track loc.locationId) {
+                    <option [value]="loc.locationId">{{ loc.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="col-4">
+                <label class="form-label fw-semibold small">Min Level <span class="text-danger">*</span></label>
+                <input type="number" class="form-control form-control-sm" placeholder="e.g. 20"
+                  [(ngModel)]="formMinLevel" name="minLevel" required min="0" />
+              </div>
+              <div class="col-4">
+                <label class="form-label fw-semibold small">Par Level <span class="text-danger">*</span></label>
+                <input type="number" class="form-control form-control-sm" placeholder="e.g. 100"
+                  [(ngModel)]="formParLevel" name="parLevel" required min="1" />
+              </div>
+              <div class="col-4">
+                <label class="form-label fw-semibold small">Max Level <span class="text-danger">*</span></label>
+                <input type="number" class="form-control form-control-sm" placeholder="e.g. 500"
+                  [(ngModel)]="formMaxLevel" name="maxLevel" required min="1" />
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold small">Review Cycle</label>
+                <select class="form-select form-select-sm" [(ngModel)]="formReviewCycle" name="reviewCycle">
+                  <option [ngValue]="true">Active</option>
+                  <option [ngValue]="false">Off</option>
+                </select>
+              </div>
+            </div>
+
+            @if (errorMessage()) {
+              <div class="alert alert-danger py-2 mt-3 small">{{ errorMessage() }}</div>
+            }
+
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" (click)="closeModal()">Cancel</button>
+          <button type="button" class="btn btn-sm btn-primary fw-semibold"
+            [disabled]="isSaving() || !formItemId || !formLocationId || formParLevel < 1 || formMaxLevel < 1"
+            (click)="saveRule()">
+            @if (isSaving()) {
+              <span class="spinner-border spinner-border-sm me-1"></span> Saving...
+            } @else {
+              {{ isEditing() ? 'Update Rule' : 'Add Rule' }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Delete Confirm Modal ── -->
+@if (showDeleteModal()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-danger">Delete Rule</h5>
+          <button type="button" class="btn-close" (click)="cancelDelete()"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-1">Are you sure you want to delete this replenishment rule?</p>
+          <p class="text-muted small mb-0">This will stop auto-check for this item/location combination.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" (click)="cancelDelete()">Cancel</button>
+          <button type="button" class="btn btn-sm btn-danger fw-semibold" (click)="deleteRule()" [disabled]="isDeleting()">
+            @if (isDeleting()) { <span class="spinner-border spinner-border-sm me-1"></span> Deleting... }
+            @else { Yes, Delete }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

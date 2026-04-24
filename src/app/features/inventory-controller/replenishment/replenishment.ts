@@ -38,6 +38,22 @@ import {
 
           @if (activeTab() === 'requests') {
             <button
+              (click)="runCheck()"
+              [disabled]="runningCheck()"
+              class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-semibold shadow-sm hover:bg-amber-600 transition-colors flex items-center gap-1.5 disabled:opacity-60"
+            >
+              @if (runningCheck()) {
+                <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                Checking...
+              } @else {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Run Check
+              }
+            </button>
+            <button
               (click)="openCreateModal()"
               class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold shadow-sm hover:bg-emerald-700 transition-colors flex items-center gap-1.5"
             >
@@ -195,6 +211,41 @@ import {
       <!-- ── REQUESTS TAB ── -->
       @if (activeTab() === 'requests') {
 
+        <!-- Run Check Result Banner -->
+        @if (checkResult()) {
+          <div class="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+            <div class="flex items-center gap-2 text-amber-800 text-sm font-medium">
+              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ checkResult() }}
+            </div>
+            <button (click)="checkResult.set('')" class="text-amber-400 hover:text-amber-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        }
+
+        <!-- Convert Error Banner -->
+        @if (convertError()) {
+          <div class="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+            <div class="flex items-center gap-2 text-red-700 text-sm font-medium">
+              <svg class="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ convertError() }}
+            </div>
+            <button (click)="convertError.set('')" class="text-red-300 hover:text-red-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        }
+
         <!-- Stats -->
         <div class="grid grid-cols-3 gap-3">
           <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
@@ -255,6 +306,7 @@ import {
                     <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Qty</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Created</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Action</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -272,6 +324,22 @@ import {
                           [class]="statusClass(req.status)">
                           {{ req.statusName || statusLabel(req.status) }}
                         </span>
+                      </td>
+                      <td class="px-4 py-3">
+                        @if (req.status === 1) {
+                          <button
+                            (click)="convertToTO(req.replenishmentRequestId)"
+                            [disabled]="convertingId() === req.replenishmentRequestId"
+                            class="px-3 py-1.5 bg-teal-600 text-white text-xs font-semibold rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 flex items-center gap-1"
+                          >
+                            @if (convertingId() === req.replenishmentRequestId) {
+                              <span class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                            }
+                            Convert to TO
+                          </button>
+                        } @else {
+                          <span class="text-xs text-gray-300">—</span>
+                        }
                       </td>
                     </tr>
                   }
@@ -389,6 +457,11 @@ export class ReplenishmentComponent implements OnInit {
   pendingCount = computed(() => this.requests().filter((r) => r.status === 1).length);
   approvedCount = computed(() => this.requests().filter((r) => r.status === 2).length);
 
+  runningCheck  = signal(false);
+  checkResult   = signal('');
+  convertingId  = signal<number | null>(null);
+  convertError  = signal('');
+
   constructor(private icService: InventoryControllerService) {}
 
   ngOnInit() {
@@ -461,6 +534,43 @@ export class ReplenishmentComponent implements OnInit {
         this.createError.set(err.error?.message || 'Failed to submit request');
         this.creating.set(false);
       },
+    });
+  }
+
+  runCheck() {
+    this.runningCheck.set(true);
+    this.checkResult.set('');
+    this.icService.runReplenishmentCheck().subscribe({
+      next: (res) => {
+        this.runningCheck.set(false);
+        this.checkResult.set(`${res.message} — ${res.newRequestsCreated} new request(s) created.`);
+        this.loadRequests();
+      },
+      error: (err) => {
+        this.runningCheck.set(false);
+        this.checkResult.set(err.error?.message || 'Replenishment check failed.');
+      }
+    });
+  }
+
+  convertToTO(reqId: number) {
+    this.convertingId.set(reqId);
+    this.convertError.set('');
+    this.icService.convertToTransferOrder(reqId).subscribe({
+      next: (res) => {
+        this.convertingId.set(null);
+        if (res?.transferItemCreated === false) {
+          this.convertError.set(`Transfer Order created but no stock found at source location for lot assignment.`);
+        } else {
+          this.checkResult.set(`Transfer Order created successfully from request #${reqId}.`);
+        }
+        this.loadRequests();
+      },
+      error: (err) => {
+        this.convertingId.set(null);
+        const msg = err.error?.message || err.error?.title || err.message || 'Failed to convert to Transfer Order.';
+        this.convertError.set(`Request #${reqId}: ${msg}`);
+      }
     });
   }
 

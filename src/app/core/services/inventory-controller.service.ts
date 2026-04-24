@@ -71,11 +71,35 @@ export class InventoryControllerService {
     return this.http.get<ReplenishmentRule[]>(`${this.BASE}/replenishment/rules`);
   }
 
+  createReplenishmentRule(dto: { locationId: number; itemId: number; minLevel: number; parLevel: number; maxLevel: number; reviewCycle: boolean }) {
+    return this.http.post<ReplenishmentRule>(`${this.BASE}/replenishment/rules`, dto);
+  }
+
+  updateReplenishmentRule(id: number, dto: { locationId: number; itemId: number; minLevel: number; parLevel: number; maxLevel: number; reviewCycle: boolean }) {
+    return this.http.put<ReplenishmentRule>(`${this.BASE}/replenishment/rules/${id}`, dto);
+  }
+
+  deleteReplenishmentRule(id: number) {
+    return this.http.delete(`${this.BASE}/replenishment/rules/${id}`);
+  }
+
   getInventoryBalances() {
     return this.http.get<InventoryBalance[]>(`${this.BASE}/inventorybalance`);
   }
 
   getLowStockItems(threshold = 10) {
     return this.http.get<InventoryBalance[]>(`${this.BASE}/inventorybalance/low-stock?threshold=${threshold}`);
+  }
+
+  runReplenishmentCheck() {
+    return this.http.post<{ message: string; newRequestsCreated: number }>(
+      `${this.BASE}/replenishment/run-check`, {}
+    );
+  }
+
+  convertToTransferOrder(reqId: number, fromLocationId = 1) {
+    return this.http.post<any>(
+      `${this.BASE}/replenishment/${reqId}/convert?fromLocationId=${fromLocationId}`, {}
+    );
   }
 }
