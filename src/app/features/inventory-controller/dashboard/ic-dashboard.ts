@@ -9,7 +9,7 @@ import { InventoryDashboardStats } from '../../../core/models/inventory-controll
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <div>
+    <div class="p-6">
       <!-- Page header -->
       <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
@@ -45,22 +45,7 @@ import { InventoryDashboardStats } from '../../../core/models/inventory-controll
             <p class="text-sm text-gray-500 mt-1">Total Inventory Lots</p>
           </div>
 
-          <!-- Near Expiry -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div class="flex items-center justify-between mb-3">
-              <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <span class="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full font-medium">Alert</span>
-            </div>
-            <p class="text-3xl font-bold text-gray-800">{{ stats()!.nearExpiryItems }}</p>
-            <p class="text-sm text-gray-500 mt-1">Near Expiry (90 days)</p>
-          </div>
-
-          <!-- Expired -->
+<!-- Expired -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
             <div class="flex items-center justify-between mb-3">
               <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
@@ -105,24 +90,7 @@ import { InventoryDashboardStats } from '../../../core/models/inventory-controll
             <p class="text-sm text-gray-500 mt-1">Pending Replenishments</p>
           </div>
 
-          <!-- Active Expiry Watches -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div class="flex items-center justify-between mb-3">
-              <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </div>
-              <span class="text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full font-medium">Watch</span>
-            </div>
-            <p class="text-3xl font-bold text-gray-800">{{ stats()!.activeExpiryWatches }}</p>
-            <p class="text-sm text-gray-500 mt-1">Active Expiry Watches</p>
-          </div>
-
-          <!-- Low Stock -->
+<!-- Low Stock -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
             <div class="flex items-center justify-between mb-3">
               <div class="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center">
@@ -195,46 +163,6 @@ import { InventoryDashboardStats } from '../../../core/models/inventory-controll
             </div>
           </div>
 
-          <!-- Near Expiry Alerts -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 class="font-semibold text-gray-800">Near Expiry Alerts</h3>
-              <a routerLink="/ic/expiry-watch" class="text-xs text-teal-600 hover:text-teal-700 font-medium">View all →</a>
-            </div>
-            <div class="divide-y divide-gray-50">
-              @if (stats()!.nearExpiryAlerts.length === 0) {
-                <div class="px-5 py-8 text-center">
-                  <p class="text-gray-400 text-sm">No near-expiry alerts</p>
-                </div>
-              }
-              @for (alert of stats()!.nearExpiryAlerts; track alert.inventoryLotId) {
-                <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                  <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                      [class]="alert.daysToExpire <= 7 ? 'bg-red-100' : alert.daysToExpire <= 30 ? 'bg-amber-100' : 'bg-yellow-100'">
-                      <svg class="w-4 h-4"
-                        [class]="alert.daysToExpire <= 7 ? 'text-red-600' : alert.daysToExpire <= 30 ? 'text-amber-600' : 'text-yellow-600'"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p class="text-sm font-medium text-gray-800">{{ alert.itemName }}</p>
-                      <p class="text-xs text-gray-500">Batch #{{ alert.batchNumber }}</p>
-                    </div>
-                  </div>
-                  <div class="text-right">
-                    <span class="inline-block text-xs px-2 py-0.5 rounded-full font-medium"
-                      [class]="alert.daysToExpire <= 7 ? 'bg-red-100 text-red-700' : alert.daysToExpire <= 30 ? 'bg-amber-100 text-amber-700' : 'bg-yellow-100 text-yellow-700'">
-                      {{ alert.daysToExpire }}d left
-                    </span>
-                    <p class="text-xs text-gray-400 mt-0.5">{{ alert.expiryDate | date:'MMM d, y' }}</p>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
         </div>
       }
 

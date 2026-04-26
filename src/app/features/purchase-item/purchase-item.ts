@@ -4,7 +4,11 @@ import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { PurchaseItemService } from '../../core/services/purchase-item.service';
+import { PurchaseOrderService } from '../../core/services/purchase-order.service';
+import { ItemService } from '../../core/services/item.service';
 import { PurchaseItem, CreatePurchaseItemRequest, UpdatePurchaseItemRequest } from '../../core/models/purchase-item.model';
+import { PurchaseOrder } from '../../core/models/purchase-order.model';
+import { Item } from '../../core/models/item.model';
 
 @Component({
   selector: 'app-purchase-item',
@@ -13,7 +17,9 @@ import { PurchaseItem, CreatePurchaseItemRequest, UpdatePurchaseItemRequest } fr
   styleUrl: './purchase-item.css',
 })
 export class PurchaseItemComponent implements OnInit {
-  items = signal<PurchaseItem[]>([]);
+  items         = signal<PurchaseItem[]>([]);
+  purchaseOrders = signal<PurchaseOrder[]>([]);
+  stockItems    = signal<Item[]>([]);
   isLoading = signal(false);
   errorMessage = signal('');
   successMessage = signal('');
@@ -46,12 +52,28 @@ export class PurchaseItemComponent implements OnInit {
 
   constructor(
     private piService: PurchaseItemService,
+    private poService: PurchaseOrderService,
+    private itemService: ItemService,
     private authService: AuthService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadItems();
+    this.poService.getAll().subscribe({ next: (data) => this.purchaseOrders.set(data) });
+    this.itemService.getAll().subscribe({ next: (data) => this.stockItems.set(data) });
+  }
+
+  getPoLabel(id: number): string {
+    const po = this.purchaseOrders().find(p => p.purchaseOrderId === id);
+    return po ? `PO-${po.purchaseOrderId} (${po.vendorName})` : `PO-${id}`;
+  }
+
+  getItemLabel(id: number): string {
+    const item = this.stockItems().find(i => i.itemId === id);
+    if (!item) return `Item #${id}`;
+    const pack = item.packSize ? `Pack of ${item.packSize}` : item.uoMCode;
+    return `${item.drugName} — ${pack}`;
   }
 
   private resetForm(): void {

@@ -3,23 +3,22 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PharmacistService } from '../../../core/services/pharmacist.service';
 import { DispenseRefDTO, CreateDispenseRefDTO, DestinationType } from '../../../core/models/pharmacist.model';
+import { InventoryBalance } from '../../../core/models/inventory-controller.model';
 
 @Component({
   selector: 'app-pharmacist-dispense',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="space-y-5">
+    <div class="space-y-5 p-6">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 class="text-xl font-bold text-gray-800">Dispense Records</h2>
           <p class="text-gray-500 text-sm mt-0.5">Manage medication dispensing at your location</p>
         </div>
-        <button
-          (click)="openModal()"
-          class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
-        >
+        <button (click)="openModal()"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors font-medium flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
@@ -41,60 +40,51 @@ import { DispenseRefDTO, CreateDispenseRefDTO, DestinationType } from '../../../
             </div>
             <div class="p-5 space-y-4">
 
-              <!-- Location ID (read-only) -->
+              <!-- Item / Lot selector -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Location ID</label>
-                <input
-                  type="number"
-                  [value]="1"
-                  disabled
-                  class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
-                />
-              </div>
-
-              <!-- Item ID -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Item ID</label>
-                <input
-                  type="number"
-                  [(ngModel)]="newDispense.itemId"
-                  min="1"
-                  placeholder="Enter item ID"
-                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <!-- Inventory Lot ID -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Inventory Lot ID</label>
-                <input
-                  type="number"
-                  [(ngModel)]="newDispense.inventoryLotId"
-                  min="1"
-                  placeholder="Enter inventory lot ID"
-                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                  Item &amp; Batch <span class="text-red-500">*</span>
+                </label>
+                @if (loadingStock()) {
+                  <div class="text-sm text-gray-400 py-2">Loading stock...</div>
+                } @else if (stockItems().length === 0) {
+                  <p class="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    No stock available at your location.
+                  </p>
+                } @else {
+                  <select (change)="onStockSelect(getVal($event))"
+                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    <option value="">— Select item —</option>
+                    @for (s of stockItems(); track s.inventoryBalanceId) {
+                      <option [value]="s.inventoryBalanceId">
+                        {{ s.itemName }} — Batch {{ s.batchNumber }} (Available: {{ s.availableQty }})
+                      </option>
+                    }
+                  </select>
+                }
               </div>
 
               <!-- Quantity -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Quantity</label>
-                <input
-                  type="number"
-                  [(ngModel)]="newDispense.quantity"
-                  min="1"
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                  Quantity <span class="text-red-500">*</span>
+                </label>
+                <input type="number" [(ngModel)]="newDispense.quantity" min="1" [max]="selectedMax()"
+                  [disabled]="!newDispense.itemId"
                   placeholder="Enter quantity"
-                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                @if (selectedMax() > 0) {
+                  <p class="text-xs text-gray-400 mt-1">Max available: {{ selectedMax() }}</p>
+                }
               </div>
 
               <!-- Destination -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Destination Type</label>
-                <select
-                  [(ngModel)]="newDispense.destination"
-                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                  Destination <span class="text-red-500">*</span>
+                </label>
+                <select [(ngModel)]="newDispense.destination"
+                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                   <option [ngValue]="0" disabled>— Select destination —</option>
                   @for (dt of destinationTypes(); track dt.destinationTypeId) {
                     <option [ngValue]="dt.destinationTypeId">{{ dt.type }}</option>
@@ -107,17 +97,13 @@ import { DispenseRefDTO, CreateDispenseRefDTO, DestinationType } from '../../../
               }
             </div>
             <div class="flex gap-3 p-5 border-t border-gray-100">
-              <button
-                (click)="closeModal()"
-                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-              >
+              <button (click)="closeModal()"
+                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
                 Cancel
               </button>
-              <button
-                (click)="submitDispense()"
-                [disabled]="creating() || !newDispense.itemId || !newDispense.inventoryLotId || !newDispense.quantity || !newDispense.destination"
-                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button (click)="submitDispense()"
+                [disabled]="creating() || !newDispense.itemId || !newDispense.quantity || !newDispense.destination"
+                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                 @if (creating()) { Dispensing... } @else { Dispense }
               </button>
             </div>
@@ -125,14 +111,13 @@ import { DispenseRefDTO, CreateDispenseRefDTO, DestinationType } from '../../../
         </div>
       }
 
-      <!-- Stats row -->
+      <!-- Stats -->
       @if (!loading() && records().length > 0) {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
             <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
               <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
@@ -143,8 +128,7 @@ import { DispenseRefDTO, CreateDispenseRefDTO, DestinationType } from '../../../
           <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
             <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
               <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
             <div>
@@ -161,13 +145,9 @@ import { DispenseRefDTO, CreateDispenseRefDTO, DestinationType } from '../../../
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <input
-            type="text"
-            [value]="searchTerm()"
-            (input)="searchTerm.set(getInputValue($event))"
+          <input type="text" [value]="searchTerm()" (input)="searchTerm.set(getVal($event))"
             placeholder="Search by item name..."
-            class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+            class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
       </div>
 
@@ -195,29 +175,24 @@ import { DispenseRefDTO, CreateDispenseRefDTO, DestinationType } from '../../../
             <table class="w-full text-sm">
               <thead>
                 <tr class="bg-gray-50 border-b border-gray-100">
-                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-16">ID</th>
-                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Item</th>
-                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Batch #</th>
-                  <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Qty</th>
-                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Destination</th>
-                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase w-16">ID</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Item</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Batch</th>
+                  <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Qty</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Date</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Destination</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-50">
                 @for (r of filteredRecords(); track r.dispenseRefId) {
                   <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-4 py-3 font-medium text-gray-600">#{{ r.dispenseRefId }}</td>
-                    <td class="px-4 py-3">
-                      <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 bg-blue-400 rounded-full shrink-0"></div>
-                        <span class="font-medium text-gray-800">{{ r.itemName }}</span>
-                      </div>
-                    </td>
-                    <td class="px-4 py-3 text-gray-600 font-mono text-xs">{{ r.batchNumber }}</td>
+                    <td class="px-4 py-3 font-medium text-gray-800">{{ r.itemName }}</td>
+                    <td class="px-4 py-3 text-gray-500 font-mono text-xs">{{ r.batchNumber }}</td>
                     <td class="px-4 py-3 text-right font-semibold text-gray-800">{{ r.quantity }}</td>
                     <td class="px-4 py-3 text-gray-500 text-xs">{{ r.dispenseDate | date:'dd MMM yyyy, HH:mm' }}</td>
-                    <td class="px-4 py-3 text-gray-600 text-sm">{{ r.destinationName }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ r.destinationName }}</td>
                     <td class="px-4 py-3">
                       <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold"
                         [class]="r.status ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'">
@@ -238,36 +213,29 @@ import { DispenseRefDTO, CreateDispenseRefDTO, DestinationType } from '../../../
   `,
 })
 export class PharmacistDispenseComponent implements OnInit {
-  records = signal<DispenseRefDTO[]>([]);
+  records         = signal<DispenseRefDTO[]>([]);
   destinationTypes = signal<DestinationType[]>([]);
-  loading = signal(true);
-  error = signal('');
-  searchTerm = signal('');
-  showModal = signal(false);
-  creating = signal(false);
-  createError = signal('');
+  stockItems      = signal<InventoryBalance[]>([]);
+  loading         = signal(true);
+  loadingStock    = signal(false);
+  error           = signal('');
+  searchTerm      = signal('');
+  showModal       = signal(false);
+  creating        = signal(false);
+  createError     = signal('');
+  selectedMax     = signal(0);
 
-  newDispense: CreateDispenseRefDTO = {
-    locationId: 1,
-    itemId: 0,
-    inventoryLotId: 0,
-    quantity: 0,
-    destination: 0,
-  };
+  newDispense: CreateDispenseRefDTO = { locationId: 1, itemId: 0, inventoryLotId: 0, quantity: 0, destination: 0 };
 
   filteredRecords = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     if (!term) return this.records();
-    return this.records().filter((r) =>
-      r.itemName.toLowerCase().includes(term)
-    );
+    return this.records().filter(r => r.itemName?.toLowerCase().includes(term));
   });
 
   todayCount = computed(() => {
     const today = new Date().toISOString().slice(0, 10);
-    return this.records().filter(
-      (r) => r.dispenseDate && r.dispenseDate.startsWith(today) && r.status
-    ).length;
+    return this.records().filter(r => r.dispenseDate?.startsWith(today) && r.status).length;
   });
 
   constructor(private pharmacistService: PharmacistService) {}
@@ -275,8 +243,8 @@ export class PharmacistDispenseComponent implements OnInit {
   ngOnInit() {
     this.loadData();
     this.pharmacistService.getDestinationTypes().subscribe({
-      next: (data) => this.destinationTypes.set(data),
-      error: () => {},
+      next: data => this.destinationTypes.set(data),
+      error: () => {}
     });
   }
 
@@ -284,59 +252,53 @@ export class PharmacistDispenseComponent implements OnInit {
     this.loading.set(true);
     this.error.set('');
     this.pharmacistService.getDispenseRecords().subscribe({
-      next: (data) => {
-        this.records.set(data);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set(err.error?.message || 'Could not reach server');
-        this.loading.set(false);
-      },
+      next: data => { this.records.set(data); this.loading.set(false); },
+      error: err => { this.error.set(err.error?.message || 'Could not reach server'); this.loading.set(false); }
     });
   }
 
   openModal() {
-    this.newDispense = {
-      locationId: 1,
-      itemId: 0,
-      inventoryLotId: 0,
-      quantity: 0,
-      destination: 0,
-    };
+    this.newDispense = { locationId: 1, itemId: 0, inventoryLotId: 0, quantity: 0, destination: 0 };
+    this.selectedMax.set(0);
     this.createError.set('');
     this.showModal.set(true);
+    this.loadingStock.set(true);
+    this.pharmacistService.getInventoryByLocation().subscribe({
+      next: data => { this.stockItems.set(data.filter(s => s.availableQty > 0)); this.loadingStock.set(false); },
+      error: () => { this.loadingStock.set(false); }
+    });
   }
 
-  closeModal() {
-    this.showModal.set(false);
-    this.createError.set('');
+  closeModal() { this.showModal.set(false); this.createError.set(''); }
+
+  onStockSelect(balanceIdStr: string) {
+    const balanceId = +balanceIdStr;
+    const selected = this.stockItems().find(s => s.inventoryBalanceId === balanceId);
+    if (!selected) return;
+    this.newDispense.itemId = selected.itemId;
+    this.newDispense.inventoryLotId = selected.inventoryLotId;
+    this.newDispense.locationId = selected.locationId;
+    this.newDispense.quantity = 1;
+    this.selectedMax.set(selected.availableQty);
   }
 
   submitDispense() {
     this.createError.set('');
-    if (!this.newDispense.itemId || !this.newDispense.inventoryLotId || !this.newDispense.quantity || !this.newDispense.destination) {
-      this.createError.set('Please fill in all required fields.');
-      return;
+    if (!this.newDispense.itemId || !this.newDispense.quantity || !this.newDispense.destination) {
+      this.createError.set('Please fill in all required fields.'); return;
     }
     if (this.newDispense.quantity < 1) {
-      this.createError.set('Quantity must be at least 1.');
-      return;
+      this.createError.set('Quantity must be at least 1.'); return;
+    }
+    if (this.newDispense.quantity > this.selectedMax()) {
+      this.createError.set(`Cannot exceed available quantity of ${this.selectedMax()}.`); return;
     }
     this.creating.set(true);
     this.pharmacistService.createDispense(this.newDispense).subscribe({
-      next: () => {
-        this.creating.set(false);
-        this.closeModal();
-        this.loadData();
-      },
-      error: (err) => {
-        this.createError.set(err.error?.message || 'Failed to create dispense record');
-        this.creating.set(false);
-      },
+      next: () => { this.creating.set(false); this.closeModal(); this.loadData(); },
+      error: err => { this.createError.set(err.error?.message || 'Failed to dispense'); this.creating.set(false); }
     });
   }
 
-  getInputValue(event: Event): string {
-    return (event.target as HTMLInputElement).value;
-  }
+  getVal(e: Event): string { return (e.target as HTMLInputElement).value; }
 }

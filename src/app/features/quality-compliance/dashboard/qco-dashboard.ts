@@ -45,37 +45,22 @@ import { QCODashboardStats } from '../../../core/models/qco.model';
             <p class="text-sm text-gray-500 mt-1">Active Quarantines</p>
           </div>
 
-          <!-- Open Recalls -->
+          <!-- Audit Events Today -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
             <div class="flex items-center justify-between mb-3">
-              <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <span class="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded-full font-medium">Critical</span>
+              <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full font-medium">Today</span>
             </div>
-            <p class="text-3xl font-bold text-gray-800">{{ stats()!.openRecalls }}</p>
-            <p class="text-sm text-gray-500 mt-1">Open Recalls</p>
+            <p class="text-3xl font-bold text-gray-800">{{ stats()!.auditEventsToday }}</p>
+            <p class="text-sm text-gray-500 mt-1">Audit Events Today</p>
           </div>
 
-          <!-- Near Expiry Items -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div class="flex items-center justify-between mb-3">
-              <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <span class="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full font-medium">Alert</span>
-            </div>
-            <p class="text-3xl font-bold text-gray-800">{{ stats()!.nearExpiryCount }}</p>
-            <p class="text-sm text-gray-500 mt-1">Near Expiry Items</p>
-          </div>
-
-          <!-- Recent Adjustments -->
+<!-- Recent Adjustments -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
             <div class="flex items-center justify-between mb-3">
               <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -131,44 +116,42 @@ import { QCODashboardStats } from '../../../core/models/qco.model';
             </div>
           </div>
 
-          <!-- Recent Recalls -->
+          <!-- Quick Links -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 class="font-semibold text-gray-800">Recent Recalls</h3>
-              <a routerLink="/qco/recalls" class="text-xs text-violet-600 hover:text-violet-700 font-medium">View all →</a>
+            <div class="px-5 py-4 border-b border-gray-100">
+              <h3 class="font-semibold text-gray-800">Quick Actions</h3>
             </div>
-            <div class="divide-y divide-gray-50">
-              @if (stats()!.recentRecalls.length === 0) {
-                <div class="px-5 py-8 text-center">
-                  <p class="text-gray-400 text-sm">No recent recall notices</p>
+            <div class="p-5 grid grid-cols-1 gap-3">
+              <a routerLink="/qco/quarantine"
+                class="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-violet-50 hover:border-violet-200 transition-colors">
+                <div class="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                  </svg>
                 </div>
-              }
-              @for (r of stats()!.recentRecalls; track r.recallNoticeId) {
-                <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                  <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                      [class]="r.status ? 'bg-red-100' : 'bg-green-100'">
-                      <svg class="w-4 h-4"
-                        [class]="r.status ? 'text-red-600' : 'text-green-600'"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p class="text-sm font-medium text-gray-800">{{ r.drugName }}</p>
-                      <p class="text-xs text-gray-500">{{ r.action }} — {{ r.reason }}</p>
-                    </div>
-                  </div>
-                  <div class="text-right">
-                    <span class="inline-block text-xs px-2 py-0.5 rounded-full font-medium"
-                      [class]="r.status ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'">
-                      {{ r.status ? 'Active' : 'Resolved' }}
-                    </span>
-                    <p class="text-xs text-gray-400 mt-0.5">{{ r.noticeDate | date:'MMM d' }}</p>
-                  </div>
+                <span class="text-sm font-medium text-gray-700">Manage Quarantine</span>
+              </a>
+              <a routerLink="/qco/adjustments"
+                class="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-blue-50 hover:border-blue-200 transition-colors">
+                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
                 </div>
-              }
+                <span class="text-sm font-medium text-gray-700">Stock Adjustments</span>
+              </a>
+              <a routerLink="/qco/expiry"
+                class="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-amber-50 hover:border-amber-200 transition-colors">
+                <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <span class="text-sm font-medium text-gray-700">Expiry Watch</span>
+              </a>
             </div>
           </div>
         </div>

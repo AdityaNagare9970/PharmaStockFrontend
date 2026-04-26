@@ -1,4 +1,4 @@
-<div class="space-y-5">
+<div class="space-y-5 p-6">
 
   <!-- Success toasts -->
   @if (createSuccess()) {
@@ -76,9 +76,14 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           @for (item of grnFormItems(); track item.purchaseItemId; let i = $index) {
             <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
-              <div class="flex items-center justify-between mb-3">
+              <div class="flex flex-wrap items-center gap-2 mb-3">
                 <span class="font-semibold text-gray-800 text-sm">{{ item.itemName }}</span>
                 <span class="text-xs text-gray-500 bg-white border border-gray-200 rounded px-2 py-0.5">Ordered: {{ item.orderedQty }}</span>
+                <span class="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5">Received so far: {{ item.acceptedQty }}</span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded border"
+                  [class]="item.outstandingQty > 0 ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-gray-400 bg-gray-50 border-gray-200'">
+                  Outstanding: {{ item.outstandingQty }}
+                </span>
               </div>
               <div class="grid grid-cols-3 gap-3">
                 <div>

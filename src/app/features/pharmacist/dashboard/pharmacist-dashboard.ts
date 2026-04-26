@@ -9,7 +9,7 @@ import { PharmacistDashboardStats } from '../../../core/models/pharmacist.model'
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <div>
+    <div class="p-6">
       <!-- Page header -->
       <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
@@ -75,20 +75,6 @@ import { PharmacistDashboardStats } from '../../../core/models/pharmacist.model'
             <p class="text-sm text-gray-500 mt-1">Today's Dispenses</p>
           </div>
 
-          <!-- Near Expiry -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div class="flex items-center justify-between mb-3">
-              <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <span class="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded-full font-medium">Alert</span>
-            </div>
-            <p class="text-3xl font-bold text-gray-800">{{ stats()!.nearExpiryAtLocation }}</p>
-            <p class="text-sm text-gray-500 mt-1">Near Expiry at Location</p>
-          </div>
         </div>
 
         <!-- Bottom panels -->

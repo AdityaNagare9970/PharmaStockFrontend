@@ -9,7 +9,7 @@ const ROLE_ROUTES: Record<string, string> = {
   'admin': '/admin',
   'procurementofficer': '/procurement',
   'inventorycontroller': '/ic',
-  'qualityofficer': '/quality',
+  'qualitycomplianceofficer': '/quality',
   'pharmacist': '/pharmacist'
 };
 

@@ -9,7 +9,7 @@ import { IncomingTransferDTO } from '../../../core/models/pharmacist.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="space-y-5">
+    <div class="space-y-5 p-6">
       <!-- Header -->
       <div>
         <h2 class="text-xl font-bold text-gray-800">Incoming Transfers</h2>
@@ -137,6 +137,18 @@ import { IncomingTransferDTO } from '../../../core/models/pharmacist.model';
                             Confirm Receipt
                           }
                         </button>
+                      } @else if (t.status === 2) {
+                        <button
+                          (click)="receiveTransfer(t.transferOrderId)"
+                          [disabled]="receivingId() === t.transferOrderId"
+                          class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          @if (receivingId() === t.transferOrderId) {
+                            Receiving...
+                          } @else {
+                            Mark as Received
+                          }
+                        </button>
                       }
                     </td>
                   </tr>
@@ -185,6 +197,7 @@ export class IncomingTransfersComponent implements OnInit {
   searchTerm = signal('');
   expandedId = signal<number | null>(null);
   confirmingId = signal<number | null>(null);
+  receivingId  = signal<number | null>(null);
   confirmError = signal('');
 
   filteredTransfers = computed(() => {
@@ -197,8 +210,8 @@ export class IncomingTransfersComponent implements OnInit {
     );
   });
 
-  pendingCount = computed(() => this.transfers().filter((t) => t.status === 1).length);
-  completedCount = computed(() => this.transfers().filter((t) => t.status === 2).length);
+  pendingCount = computed(() => this.transfers().filter((t) => t.status === 1 || t.status === 2).length);
+  completedCount = computed(() => this.transfers().filter((t) => t.status === 3).length);
 
   constructor(private pharmacistService: PharmacistService) {}
 
@@ -239,6 +252,23 @@ export class IncomingTransfersComponent implements OnInit {
         this.confirmingId.set(null);
         setTimeout(() => this.confirmError.set(''), 4000);
       },
+    });
+  }
+
+  receiveTransfer(transferOrderId: number) {
+    this.confirmError.set('');
+    this.receivingId.set(transferOrderId);
+    this.pharmacistService.receiveTransfer(transferOrderId).subscribe({
+      next: () => {
+        this.receivingId.set(null);
+        this.expandedId.set(null);
+        this.loadData();
+      },
+      error: (err) => {
+        this.confirmError.set(err.error?.message || 'Failed to receive transfer');
+        this.receivingId.set(null);
+        setTimeout(() => this.confirmError.set(''), 4000);
+      }
     });
   }
 

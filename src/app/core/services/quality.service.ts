@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { QualityDashboardStats, ColdChainLog, RecallNotice, QuarantineAction } from '../models/quality.model';
+import { QualityDashboardStats, ColdChainLog, RecallNotice, QuarantineAction, ActiveLot } from '../models/quality.model';
 
 @Injectable({ providedIn: 'root' })
 export class QualityService {
@@ -26,6 +26,14 @@ export class QualityService {
 
   getQuarantineActions() {
     return this.http.get<QuarantineAction[]>(`${this.BASE}/quarantine`);
+  }
+
+  getActiveLots() {
+    return this.http.get<ActiveLot[]>(`${this.BASE}/quarantine/active-lots`);
+  }
+
+  createQuarantine(dto: { inventoryLotId: number; reason: string }) {
+    return this.http.post(`${this.BASE}/quarantine`, dto);
   }
 
   releaseQuarantine(qaId: number) {

@@ -4,10 +4,8 @@ import {
   QCODashboardStats,
   QuarantineActionDTO,
   CreateQuarantineActionDTO,
-  RecallNoticeDTO,
   StockAdjustmentDTO,
 } from '../models/qco.model';
-import { ExpiryWatch, InventoryLot } from '../models/inventory-controller.model';
 
 @Injectable({ providedIn: 'root' })
 export class QcoService {
@@ -37,23 +35,9 @@ export class QcoService {
     return this.http.patch(`${this.BASE}/quarantine/${id}/dispose`, {});
   }
 
-  // Recall Notices
-  getRecallNotices() {
-    return this.http.get<RecallNoticeDTO[]>(`${this.BASE}/recall`);
-  }
-
-  // Stock Adjustments
+// Stock Adjustments
   getStockAdjustments() {
     return this.http.get<StockAdjustmentDTO[]>(`${this.BASE}/stock-adjustment`);
   }
 
-  // Expiry watch (reuse existing endpoint)
-  getExpiryWatch(days = 9999) {
-    return this.http.get<ExpiryWatch[]>(`${this.BASE}/expirywatch/near-expiry?days=${days}`);
-  }
-
-  // Inventory lots (reuse existing endpoint)
-  getInventoryLots() {
-    return this.http.get<InventoryLot[]>(`${this.BASE}/inventorylot/search`);
-  }
 }

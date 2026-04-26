@@ -25,7 +25,6 @@ export class PurchaseOrderService {
     return this.http.post<PurchaseOrder>(`${this.base}/create`, {
       VendorId:     po.vendorId,
       LocationId:   po.locationId,
-      OrderDate:    po.orderDate,
       ExpectedDate: po.expectedDate,
     });
   }

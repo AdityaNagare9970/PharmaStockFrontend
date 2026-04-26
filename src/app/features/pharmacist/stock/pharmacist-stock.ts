@@ -9,7 +9,7 @@ import { InventoryBalance } from '../../../core/models/inventory-controller.mode
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="space-y-5">
+    <div class="space-y-5 p-6">
       <!-- Header -->
       <div>
         <h2 class="text-xl font-bold text-gray-800">My Stock</h2>
@@ -101,9 +101,8 @@ import { InventoryBalance } from '../../../core/models/inventory-controller.mode
                   <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Item</th>
                   <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Batch #</th>
                   <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Expiry Date</th>
-                  <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">On Hand</th>
-                  <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Reserved</th>
-                  <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Available</th>
+                  <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">On Hand</th>
+                  <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Available</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-50">
@@ -119,9 +118,8 @@ import { InventoryBalance } from '../../../core/models/inventory-controller.mode
                     <td class="px-4 py-3 text-gray-500 text-xs">
                       {{ item.expiryDate ? (item.expiryDate | date:'dd MMM yyyy') : '—' }}
                     </td>
-                    <td class="px-4 py-3 text-right font-semibold text-gray-800">{{ item.quantityOnHand }}</td>
-                    <td class="px-4 py-3 text-right text-gray-500">{{ item.reservedQty }}</td>
-                    <td class="px-4 py-3 text-right">
+                    <td class="px-4 py-3 text-center font-semibold text-gray-800">{{ item.quantityOnHand }}</td>
+                    <td class="px-4 py-3 text-center">
                       <span class="inline-flex items-center justify-center min-w-[2.5rem] px-2.5 py-0.5 rounded-full text-xs font-bold"
                         [class]="getAvailabilityClass(item.availableQty)">
                         {{ item.availableQty }}

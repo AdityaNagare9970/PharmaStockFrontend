@@ -13,6 +13,8 @@ export class ItemService {
     return {
       itemId:           raw.itemId           ?? raw.ItemId           ?? 0,
       drugId:           raw.drugId           ?? raw.DrugId           ?? 0,
+      drugName:         raw.drugName         ?? raw.DrugName         ?? '',
+      uoMCode:          raw.uoMCode          ?? raw.UoMCode          ?? '',
       packSize:         raw.packSize         ?? raw.PackSize         ?? null,
       uoMId:            raw.uoMId            ?? raw.UoMId            ?? raw.uoM ?? raw.UoM ?? raw.UOM ?? 0,
       conversionToEach: raw.conversionToEach ?? raw.ConversionToEach ?? 0,

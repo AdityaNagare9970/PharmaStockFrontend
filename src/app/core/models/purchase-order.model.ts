@@ -12,7 +12,6 @@ export interface PurchaseOrder {
 export interface CreatePurchaseOrderRequest {
   vendorId: number;
   locationId: number;
-  orderDate: string;
   expectedDate: string;
 }
 

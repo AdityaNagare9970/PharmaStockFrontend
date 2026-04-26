@@ -87,12 +87,25 @@ export class InventoryControllerService {
     return this.http.get<InventoryBalance[]>(`${this.BASE}/inventorybalance`);
   }
 
+  getInventoryBalancesByLocation(locationId: number) {
+    return this.http.get<InventoryBalance[]>(`${this.BASE}/inventorybalance/location/${locationId}`);
+  }
+
+  addTransferItem(dto: { transferOrderId: number; itemId: number; inventoryLotId: number; quantity: number }) {
+    return this.http.post<any>(`${this.BASE}/transferorder/addItem`, {
+      transferOrderId: dto.transferOrderId,
+      itemId: dto.itemId,
+      inventoryLotId: dto.inventoryLotId,
+      quantity: dto.quantity
+    });
+  }
+
   getLowStockItems(threshold = 10) {
     return this.http.get<InventoryBalance[]>(`${this.BASE}/inventorybalance/low-stock?threshold=${threshold}`);
   }
 
   runReplenishmentCheck() {
-    return this.http.post<{ message: string; newRequestsCreated: number }>(
+    return this.http.post<{ message: string; transferOrdersCreated: number; purchaseOrdersCreated: number; skipped: number }>(
       `${this.BASE}/replenishment/run-check`, {}
     );
   }

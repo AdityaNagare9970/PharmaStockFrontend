@@ -27,6 +27,16 @@ export class AuthService {
     localStorage.setItem('role', role.toLowerCase());
   }
 
+  getUsername(): string {
+    const token = this.getToken();
+    if (!token) return '';
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload['unique_name'] ?? payload['name'] ??
+             payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] ?? '';
+    } catch { return ''; }
+  }
+
   getToken(): string | null {
     return localStorage.getItem('token');
   }

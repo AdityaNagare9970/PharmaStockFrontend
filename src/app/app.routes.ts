@@ -13,21 +13,18 @@ import { AdminDashboard } from './features/admin/admin-dashboard';
 import { ProcurementLayoutComponent } from './features/procurement/procurement-layout/procurement-layout';
 import { QualityLayoutComponent } from './features/quality/quality-layout/quality-layout';
 import { QualityDashboardNewComponent } from './features/quality/dashboard/quality-dashboard-new';
-import { ColdChainComponent } from './features/quality/cold-chain/cold-chain';
-import { RecallsComponent } from './features/quality/recalls/recalls';
 import { QuarantineComponent } from './features/quality/quarantine/quarantine';
 
 import { IcLayoutComponent } from './features/inventory-controller/ic-layout/ic-layout';
 import { IcDashboardComponent } from './features/inventory-controller/dashboard/ic-dashboard';
 import { InventoryLotsComponent } from './features/inventory-controller/inventory-lots/inventory-lots';
-import { ExpiryWatchComponent } from './features/inventory-controller/expiry-watch/expiry-watch';
 import { TransferOrdersComponent } from './features/inventory-controller/transfer-orders/transfer-orders';
 import { ReplenishmentComponent } from './features/inventory-controller/replenishment/replenishment';
+import { StockBalanceComponent } from './features/inventory-controller/stock-balance/stock-balance';
 
 import { PharmacistLayoutComponent } from './features/pharmacist/pharmacist-layout/pharmacist-layout';
 import { PharmacistDashboardComponent } from './features/pharmacist/dashboard/pharmacist-dashboard';
 import { PharmacistStockComponent } from './features/pharmacist/stock/pharmacist-stock';
-import { PharmacistExpiryComponent } from './features/pharmacist/expiry/pharmacist-expiry';
 import { IncomingTransfersComponent } from './features/pharmacist/transfers/incoming-transfers';
 import { PharmacistDispenseComponent } from './features/pharmacist/dispense/pharmacist-dispense';
 import { GrnComponent } from './features/pharmacist/grn/grn';
@@ -119,8 +116,8 @@ export const routes: Routes = [
     children: [
       { path: '',               redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard',      component: IcDashboardComponent      },
-      { path: 'inventory-lots', component: InventoryLotsComponent    },
-      { path: 'expiry-watch',   component: ExpiryWatchComponent      },
+      { path: 'inventory-lots',  component: InventoryLotsComponent    },
+      { path: 'stock-balance',   component: StockBalanceComponent     },
       { path: 'transfer-orders',component: TransferOrdersComponent   },
       { path: 'replenishment',  component: ReplenishmentComponent    },
     ]
@@ -131,12 +128,10 @@ export const routes: Routes = [
     path: 'quality',
     component: QualityLayoutComponent,
     canActivate: [roleGuard],
-    data: { roles: ['qualityofficer'] },
+    data: { roles: ['qualitycomplianceofficer'] },
     children: [
       { path: '',            redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard',   component: QualityDashboardNewComponent  },
-      { path: 'cold-chain',  component: ColdChainComponent            },
-      { path: 'recalls',     component: RecallsComponent              },
       { path: 'quarantine',  component: QuarantineComponent           },
       { path: 'audit',       component: AuditComponent                },
     ]
@@ -152,7 +147,6 @@ export const routes: Routes = [
       { path: '',          redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: PharmacistDashboardComponent },
       { path: 'stock',     component: PharmacistStockComponent     },
-      { path: 'expiry',    component: PharmacistExpiryComponent    },
       { path: 'transfers', component: IncomingTransfersComponent   },
       { path: 'dispense',  component: PharmacistDispenseComponent  },
       { path: 'grn',       component: GrnComponent                 },

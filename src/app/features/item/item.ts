@@ -58,8 +58,8 @@ export class ItemComponent implements OnInit {
 
   // ── Update form ───────────────────────────────────────
   updateData: Item = {
-    itemId: 0, drugId: 0, packSize: null, uoMId: 0,
-    conversionToEach: 1, barcode: ''
+    itemId: 0, drugId: 0, drugName: '', packSize: null, uoMId: 0,
+    uoMCode: '', conversionToEach: 1, barcode: ''
   };
 
   // ── Delete confirmation ───────────────────────────────

@@ -3,12 +3,16 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { PurchaseOrderService } from '../../core/services/purchase-order.service';
+import { VendorService } from '../../core/services/vendor.service';
+import { LocationService } from '../../core/services/location.service';
 import {
   PurchaseOrder,
   CreatePurchaseOrderRequest,
   UpdatePurchaseOrderRequest,
   PurchaseOrderStatus,
 } from '../../core/models/purchase-order.model';
+import { Vendor } from '../../core/models/vendor.model';
+import { Location } from '../../core/models/location.model';
 
 @Component({
   selector: 'app-purchase-order',
@@ -17,8 +21,10 @@ import {
   styleUrl: './purchase-order.css',
 })
 export class PurchaseOrderComponent implements OnInit {
-  orders = signal<PurchaseOrder[]>([]);
+  orders   = signal<PurchaseOrder[]>([]);
   statuses = signal<PurchaseOrderStatus[]>([]);
+  vendors  = signal<Vendor[]>([]);
+  locations = signal<Location[]>([]);
   isLoading = signal(false);
   errorMessage = signal('');
   successMessage = signal('');
@@ -47,12 +53,13 @@ export class PurchaseOrderComponent implements OnInit {
   // Form fields
   formVendorId = 0;
   formLocationId = 0;
-  formOrderDate = '';
   formExpectedDate = '';
   formStatusId = 0;
 
   constructor(
     private poService: PurchaseOrderService,
+    private vendorService: VendorService,
+    private locationService: LocationService,
     private authService: AuthService,
     private router: Router
   ) {}
@@ -60,18 +67,15 @@ export class PurchaseOrderComponent implements OnInit {
   ngOnInit(): void {
     this.loadOrders();
     this.loadStatuses();
-  }
-
-  private todayIso(): string {
-    return new Date().toISOString().substring(0, 10);
+    this.vendorService.getAll().subscribe({ next: (data) => this.vendors.set(data.filter(v => v.statusId)) });
+    this.locationService.getAll().subscribe({ next: (data) => this.locations.set(data.filter(l => l.statusId)) });
   }
 
   private resetForm(): void {
-    this.formVendorId    = 0;
-    this.formLocationId  = 0;
-    this.formOrderDate   = this.todayIso();
+    this.formVendorId     = 0;
+    this.formLocationId   = 0;
     this.formExpectedDate = '';
-    this.formStatusId    = 0;
+    this.formStatusId     = 0;
   }
 
   loadOrders(): void {
@@ -100,6 +104,14 @@ export class PurchaseOrderComponent implements OnInit {
     this.searchVendor.set('');
   }
 
+  getVendorName(id: number): string {
+    return this.vendors().find(v => v.vendorId === id)?.name ?? `Vendor #${id}`;
+  }
+
+  getLocationName(id: number): string {
+    return this.locations().find(l => l.locationId === id)?.name ?? `Location #${id}`;
+  }
+
   openAdd(): void {
     this.resetForm();
     this.isEditing.set(false);
@@ -111,7 +123,6 @@ export class PurchaseOrderComponent implements OnInit {
   openEdit(order: PurchaseOrder): void {
     this.formVendorId     = order.vendorId;
     this.formLocationId   = order.locationId;
-    this.formOrderDate    = order.orderDate;
     this.formExpectedDate = order.expectedDate;
     this.formStatusId     = order.purchaseOrderStatusId;
     this.isEditing.set(true);
@@ -143,7 +154,6 @@ export class PurchaseOrderComponent implements OnInit {
       const payload: CreatePurchaseOrderRequest = {
         vendorId:     Number(this.formVendorId),
         locationId:   Number(this.formLocationId),
-        orderDate:    this.formOrderDate,
         expectedDate: this.formExpectedDate,
       };
       this.poService.create(payload).subscribe({

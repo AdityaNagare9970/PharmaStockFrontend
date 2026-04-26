@@ -9,7 +9,7 @@ import { QuarantineAction } from '../../../core/models/quality.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div>
+    <div class="p-6">
       <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Quarantine Management</h2>
         <p class="text-gray-500 text-sm mt-1">Review and act on quarantined inventory lots</p>
@@ -27,17 +27,6 @@ import { QuarantineAction } from '../../../core/models/quality.model';
           <div>
             <p class="text-2xl font-bold text-purple-600">{{ quarantinedCount() }}</p>
             <p class="text-sm text-gray-500">Quarantined</p>
-          </div>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm border border-green-100 p-4 flex items-center gap-4">
-          <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-gray-800">{{ releasedCount() }}</p>
-            <p class="text-sm text-gray-500">Released</p>
           </div>
         </div>
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4">
@@ -67,8 +56,7 @@ import { QuarantineAction } from '../../../core/models/quality.model';
           class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
         >
           <option value="">All Status</option>
-          <option value="Quarantined">Quarantined</option>
-          <option value="Released">Released</option>
+          <option value="Active">Active</option>
           <option value="Disposed">Disposed</option>
         </select>
         <button (click)="loadData()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors">
@@ -104,28 +92,22 @@ import { QuarantineAction } from '../../../core/models/quality.model';
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
-                @for (qa of filteredItems(); track qa.qaId) {
+                @for (qa of filteredItems(); track qa.quarantaineActionId) {
                   <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-3 font-medium text-gray-800">#{{ qa.qaId }}</td>
+                    <td class="px-4 py-3 font-medium text-gray-800">#{{ qa.quarantaineActionId }}</td>
                     <td class="px-4 py-3 text-gray-800 font-medium">{{ qa.itemName }}</td>
                     <td class="px-4 py-3 text-gray-600 font-mono text-xs">{{ qa.batchNumber }}</td>
                     <td class="px-4 py-3 text-gray-500">{{ qa.quarantineDate | date:'dd MMM yyyy' }}</td>
                     <td class="px-4 py-3 text-gray-600 max-w-xs truncate">{{ qa.reason }}</td>
                     <td class="px-4 py-3">
-                      <span [class]="getStatusClass(qa.status)">{{ qa.status }}</span>
+                      <span [class]="getStatusClass(qa.statusName)">{{ qa.statusName }}</span>
                     </td>
                     <td class="px-4 py-3">
-                      @if (qa.status === 'Quarantined') {
-                        <div class="flex gap-2">
-                          <button
-                            (click)="releaseItem(qa)"
-                            class="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded-lg transition-colors"
-                          >Release</button>
-                          <button
-                            (click)="disposeItem(qa)"
-                            class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded-lg transition-colors"
-                          >Dispose</button>
-                        </div>
+                      @if (qa.status === 1) {
+                        <button
+                          (click)="disposeItem(qa)"
+                          class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded-lg transition-colors"
+                        >Dispose</button>
                       } @else {
                         <span class="text-xs text-gray-400">—</span>
                       }
@@ -152,19 +134,20 @@ export class QuarantineComponent implements OnInit {
   searchTerm = '';
   filterStatus = '';
 
+
   filteredItems = computed(() => {
     let result = this.items();
     if (this.searchTerm) {
       const t = this.searchTerm.toLowerCase();
       result = result.filter(q => q.itemName?.toLowerCase().includes(t) || q.batchNumber?.toLowerCase().includes(t));
     }
-    if (this.filterStatus) result = result.filter(q => q.status === this.filterStatus);
+    if (this.filterStatus) result = result.filter(q => q.statusName === this.filterStatus);
     return result;
   });
 
-  quarantinedCount = computed(() => this.items().filter(q => q.status === 'Quarantined').length);
-  releasedCount = computed(() => this.items().filter(q => q.status === 'Released').length);
-  disposedCount = computed(() => this.items().filter(q => q.status === 'Disposed').length);
+  quarantinedCount = computed(() => this.items().filter(q => q.status === 1).length);
+
+  disposedCount = computed(() => this.items().filter(q => q.status === 3).length);
 
   constructor(private qualityService: QualityService) {}
 
@@ -179,15 +162,8 @@ export class QuarantineComponent implements OnInit {
     });
   }
 
-  releaseItem(qa: QuarantineAction) {
-    this.qualityService.releaseQuarantine(qa.qaId).subscribe({
-      next: () => this.loadData(),
-      error: (err) => alert(err.error?.message || 'Failed to release')
-    });
-  }
-
   disposeItem(qa: QuarantineAction) {
-    this.qualityService.disposeQuarantine(qa.qaId).subscribe({
+    this.qualityService.disposeQuarantine(qa.quarantaineActionId).subscribe({
       next: () => this.loadData(),
       error: (err) => alert(err.error?.message || 'Failed to dispose')
     });
@@ -195,7 +171,7 @@ export class QuarantineComponent implements OnInit {
 
   getStatusClass(status: string): string {
     const base = 'text-xs px-2 py-1 rounded-full font-medium ';
-    if (status === 'Quarantined') return base + 'bg-purple-100 text-purple-700';
+    if (status === 'Active') return base + 'bg-purple-100 text-purple-700';
     if (status === 'Released') return base + 'bg-green-100 text-green-700';
     if (status === 'Disposed') return base + 'bg-gray-100 text-gray-600';
     return base + 'bg-gray-100 text-gray-700';

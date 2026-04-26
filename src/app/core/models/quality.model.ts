@@ -16,22 +16,31 @@ export interface ColdChainLog {
 }
 
 export interface RecallNotice {
-  recallId: number;
+  recallNoticeId: number;
   drugId: number;
   drugName: string;
   noticeDate: string;
   reason: string;
-  action: string; // 'Quarantine' | 'Return' | 'Dispose'
-  status: string; // 'Open' | 'Closed'
+  action: number;
+  actionName: string;
+  status: boolean; // false = Open, true = Closed
+}
+
+export interface ActiveLot {
+  inventoryLotId: number;
+  batchNumber: string;
+  expiryDate: string;
+  itemName: string;
 }
 
 export interface QuarantineAction {
-  qaId: number;
-  lotId: number;
+  quarantaineActionId: number;
+  inventoryLotId: number;
   batchNumber: string;
   itemName: string;
   quarantineDate: string;
   reason: string;
   releasedDate?: string;
-  status: string; // 'Quarantined' | 'Released' | 'Disposed'
+  status: number;
+  statusName: string;
 }

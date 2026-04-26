@@ -26,6 +26,8 @@ export interface PODetailItem {
   itemId: number;
   itemName: string;
   orderedQty: number;
+  acceptedQty: number;
+  outstandingQty: number;
   unitPrice: number;
   taxPct: number;
 }
@@ -101,6 +103,8 @@ export interface GrnFormItem {
   itemId: number;
   itemName: string;
   orderedQty: number;
+  acceptedQty: number;
+  outstandingQty: number;
   batchNumber: string;
   expiryDate: string;
   receivedQty: number;

@@ -9,7 +9,7 @@ import { QualityDashboardStats } from '../../../core/models/quality.model';
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <div>
+    <div class="p-6">
       <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
         <p class="text-gray-500 text-sm mt-1">Quality & Compliance overview</p>

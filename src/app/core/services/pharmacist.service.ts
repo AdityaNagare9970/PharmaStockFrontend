@@ -35,6 +35,10 @@ export class PharmacistService {
     return this.http.patch(`${this.BASE}/pharmacist-transfer/${transferOrderId}/confirm`, {});
   }
 
+  receiveTransfer(transferOrderId: number) {
+    return this.http.patch(`${this.BASE}/pharmacist-transfer/${transferOrderId}/receive`, {});
+  }
+
   // Dispense
   getDispenseRecords() {
     return this.http.get<DispenseRefDTO[]>(`${this.BASE}/dispense`);

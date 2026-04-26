@@ -12,15 +12,12 @@ export interface PharmLocation {
 
 export interface InventoryDashboardStats {
   totalInventoryLots: number;
-  nearExpiryItems: number;
   expiredItems: number;
   openTransferOrders: number;
   pendingReplenishments: number;
-  activeExpiryWatches: number;
   totalLocations: number;
   lowStockItems: number;
   recentTransfers: RecentTransfer[];
-  nearExpiryAlerts: NearExpiryAlert[];
 }
 
 export interface RecentTransfer {
@@ -31,18 +28,12 @@ export interface RecentTransfer {
   status: string;
 }
 
-export interface NearExpiryAlert {
-  inventoryLotId: number;
-  itemName: string;
-  batchNumber: number;
-  expiryDate: string;
-  daysToExpire: number;
-}
 
 export interface InventoryLot {
   inventoryLotId: number;
   itemId: number;
-  batchNumber: number;
+  itemName: string | null;
+  batchNumber: string;
   expiryDate: string;
   manufacturerId: number | null;
   status: number;
@@ -102,7 +93,7 @@ export interface InventoryBalance {
   itemId: number;
   itemName: string;
   inventoryLotId: number;
-  batchNumber: number;
+  batchNumber: string;
   expiryDate: string | null;
   quantityOnHand: number;
   reservedQty: number;

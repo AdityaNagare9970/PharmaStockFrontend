@@ -6,7 +6,7 @@ import { RouterLink } from '@angular/router';
   standalone: true,
   imports: [RouterLink],
   template: `
-    <div>
+    <div class="p-6">
       <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
         <p class="text-gray-500 text-sm mt-1">Procurement overview</p>

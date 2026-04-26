@@ -9,7 +9,7 @@ import { InventoryLot } from '../../../core/models/inventory-controller.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="space-y-5">
+    <div class="space-y-5 p-6">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -38,7 +38,7 @@ import { InventoryLot } from '../../../core/models/inventory-controller.model';
             type="text"
             [value]="searchTerm()"
             (input)="searchTerm.set(getInputValue($event))"
-            placeholder="Search by batch number or item ID..."
+            placeholder="Search by item name or batch number..."
             class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
@@ -54,6 +54,12 @@ import { InventoryLot } from '../../../core/models/inventory-controller.model';
           <option value="4">Disposed</option>
         </select>
       </div>
+
+      @if (loadError()) {
+        <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+          {{ loadError() }}
+        </div>
+      }
 
       <!-- Summary -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -96,7 +102,7 @@ import { InventoryLot } from '../../../core/models/inventory-controller.model';
               <thead>
                 <tr class="bg-gray-50 border-b border-gray-100">
                   <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Lot ID</th>
-                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Item ID</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Item</th>
                   <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Batch #</th>
                   <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Expiry Date</th>
                   <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
@@ -107,7 +113,7 @@ import { InventoryLot } from '../../../core/models/inventory-controller.model';
                 @for (lot of filteredLots(); track lot.inventoryLotId) {
                   <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-4 py-3 text-gray-400 text-xs">#{{ lot.inventoryLotId }}</td>
-                    <td class="px-4 py-3 text-gray-600">{{ lot.itemId }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ lot.itemName ?? lot.itemId }}</td>
                     <td class="px-4 py-3 font-medium text-gray-800">#{{ lot.batchNumber }}</td>
                     <td class="px-4 py-3 text-gray-600">{{ lot.expiryDate | date:'dd MMM yyyy' }}</td>
                     <td class="px-4 py-3">
@@ -137,6 +143,7 @@ import { InventoryLot } from '../../../core/models/inventory-controller.model';
 export class InventoryLotsComponent implements OnInit {
   lots = signal<InventoryLot[]>([]);
   loading = signal(true);
+  loadError = signal('');
   searchTerm = signal('');
   statusFilter = signal('');
 
@@ -146,9 +153,9 @@ export class InventoryLotsComponent implements OnInit {
     return this.lots().filter((l) => {
       const matchesTerm =
         !term ||
-        l.batchNumber?.toString().includes(term) ||
-        l.itemId?.toString().includes(term) ||
-        l.inventoryLotId?.toString().includes(term);
+        l.itemName?.toLowerCase().includes(term) ||
+        l.batchNumber?.toString().toLowerCase().includes(term) ||
+        l.itemId?.toString().includes(term);
       const matchesStatus = !status || l.status.toString() === status;
       return matchesTerm && matchesStatus;
     });
@@ -162,9 +169,13 @@ export class InventoryLotsComponent implements OnInit {
 
   loadData() {
     this.loading.set(true);
+    this.loadError.set('');
     this.icService.getInventoryLots().subscribe({
       next: (data) => { this.lots.set(data); this.loading.set(false); },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        this.loadError.set(`Failed to load lots (${err.status}: ${err.error?.message || err.message || 'Unknown error'})`);
+        this.loading.set(false);
+      },
     });
   }
 

@@ -79,8 +79,8 @@
               @for (item of filteredItems(); track item.purchaseItemId; let i = $index) {
                 <tr>
                   <td class="row-num">{{ i + 1 }}</td>
-                  <td class="name-cell">{{ item.itemId }}</td>
-                  <td>{{ item.purchaseOrderId }}</td>
+                  <td class="name-cell">{{ getItemLabel(item.itemId) }}</td>
+                  <td>{{ getPoLabel(item.purchaseOrderId) }}</td>
                   <td>{{ item.orderedQty }}</td>
                   <td>{{ item.unitPrice | number:'1.2-2' }}</td>
                   <td>{{ item.taxPct }}%</td>
@@ -116,14 +116,22 @@
           @if (!isEditing()) {
             <div class="field-row">
               <div class="field-group">
-                <label class="field-label">Purchase Order ID <span class="required">*</span></label>
-                <input type="number" class="field-input" placeholder="e.g. 1"
-                  [(ngModel)]="formPurchaseOrderId" name="purchaseOrderId" required min="1" />
+                <label class="field-label">Purchase Order <span class="required">*</span></label>
+                <select class="field-input" [(ngModel)]="formPurchaseOrderId" name="purchaseOrderId" required>
+                  <option [value]="0" disabled>— Select PO —</option>
+                  @for (po of purchaseOrders(); track po.purchaseOrderId) {
+                    <option [value]="po.purchaseOrderId">PO-{{ po.purchaseOrderId }} — {{ po.vendorName }}</option>
+                  }
+                </select>
               </div>
               <div class="field-group">
-                <label class="field-label">Item ID <span class="required">*</span></label>
-                <input type="number" class="field-input" placeholder="e.g. 5"
-                  [(ngModel)]="formItemId" name="itemId" required min="1" />
+                <label class="field-label">Item <span class="required">*</span></label>
+                <select class="field-input" [(ngModel)]="formItemId" name="itemId" required>
+                  <option [value]="0" disabled>— Select item —</option>
+                  @for (i of stockItems(); track i.itemId) {
+                    <option [value]="i.itemId">{{ i.drugName }}{{ i.packSize ? ' — Pack of ' + i.packSize : (i.uoMCode ? ' — ' + i.uoMCode : '') }}</option>
+                  }
+                </select>
               </div>
             </div>
           }
@@ -131,12 +139,12 @@
           @if (isEditing()) {
             <div class="field-row">
               <div class="field-group">
-                <label class="field-label">Purchase Order ID</label>
-                <input type="number" class="field-input" [value]="formPurchaseOrderId" disabled />
+                <label class="field-label">Purchase Order</label>
+                <input class="field-input" [value]="getPoLabel(formPurchaseOrderId)" disabled />
               </div>
               <div class="field-group">
-                <label class="field-label">Item ID</label>
-                <input type="number" class="field-input" [value]="formItemId" disabled />
+                <label class="field-label">Item</label>
+                <input class="field-input" [value]="getItemLabel(formItemId)" disabled />
               </div>
             </div>
           }

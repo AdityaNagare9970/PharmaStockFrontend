@@ -2,7 +2,6 @@ export interface PharmacistDashboardStats {
   totalStockItems: number;
   pendingIncomingTransfers: number;
   todayDispenses: number;
-  nearExpiryAtLocation: number;
   recentDispenses: RecentDispenseDTO[];
   incomingTransferSummary: IncomingTransferSummaryDTO[];
 }

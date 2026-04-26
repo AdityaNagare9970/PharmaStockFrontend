@@ -62,7 +62,7 @@ export class GrnComponent implements OnInit {
 
   ngOnInit() {
     this.loadAll();
-    this.formReceivedBy = this.authService.getRole() ?? '';
+    this.formReceivedBy = this.authService.getUsername() || this.authService.getRole();
   }
 
   loadAll() {
@@ -118,9 +118,11 @@ export class GrnComponent implements OnInit {
           itemId: item.itemId,
           itemName: item.itemName,
           orderedQty: item.orderedQty,
+          acceptedQty: item.acceptedQty,
+          outstandingQty: item.outstandingQty,
           batchNumber: '',
           expiryDate: '',
-          receivedQty: item.orderedQty,
+          receivedQty: item.outstandingQty > 0 ? item.outstandingQty : item.orderedQty,
         })));
         this.loadingPODetails.set(false);
       },

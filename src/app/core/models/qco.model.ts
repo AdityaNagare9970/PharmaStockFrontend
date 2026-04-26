@@ -1,10 +1,9 @@
 export interface QCODashboardStats {
   activeQuarantines: number;
-  openRecalls: number;
   nearExpiryCount: number;
   recentAdjustmentsCount: number;
+  auditEventsToday: number;
   recentQuarantines: RecentQuarantineDTO[];
-  recentRecalls: RecentRecallDTO[];
 }
 
 export interface RecentQuarantineDTO {
@@ -17,14 +16,6 @@ export interface RecentQuarantineDTO {
   status: string;
 }
 
-export interface RecentRecallDTO {
-  recallNoticeId: number;
-  drugName: string;
-  noticeDate: string;
-  reason: string;
-  action: string;
-  status: boolean;
-}
 
 export interface QuarantineActionDTO {
   quarantaineActionId: number;
@@ -43,16 +34,6 @@ export interface CreateQuarantineActionDTO {
   reason: string;
 }
 
-export interface RecallNoticeDTO {
-  recallNoticeId: number;
-  drugId: number;
-  drugName: string;
-  noticeDate: string;
-  reason: string | null;
-  action: number;
-  actionName: string;
-  status: boolean;
-}
 
 export interface StockAdjustmentDTO {
   stockAdjustmentId: number;
