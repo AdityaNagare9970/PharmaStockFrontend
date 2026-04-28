@@ -109,19 +109,6 @@
             </select>
           </div>
 
-          <!-- Status Filter -->
-          <div class="col-6 col-md-2">
-            <label class="form-label small fw-medium text-muted mb-1">🔘 Status</label>
-            <select class="form-select form-select-sm"
-              [ngModel]="filterStatus()"
-              (ngModelChange)="filterStatus.set($event)"
-              name="filterStatus">
-              <option value="all">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-
           <!-- Clear Filters -->
           <div class="col-12 col-md-1 d-flex align-items-end">
             @if (hasActiveFilters()) {
@@ -143,10 +130,6 @@
               <span class="badge bg-white text-primary ms-2">{{ filteredBins().length }} result(s)</span>
             }
           </span>
-          <button class="btn btn-light btn-sm" (click)="loadAll()" [disabled]="isLoading()">
-            @if (isLoading()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-            Refresh
-          </button>
         </div>
 
         <div class="card-body p-0">
@@ -174,7 +157,6 @@
                     <th>Storage Class</th>
                     <th class="text-center">Quarantine</th>
                     <th>Max Capacity</th>
-                    <th>Status</th>
                     <th class="text-center">Actions</th>
                   </tr>
                 </thead>
@@ -193,13 +175,6 @@
                         }
                       </td>
                       <td class="text-muted small">{{ bin.maxCapacity }}</td>
-                      <td>
-                        <span class="badge rounded-pill"
-                          [class.bg-success]="bin.isActive"
-                          [class.bg-secondary]="!bin.isActive">
-                          {{ bin.isActive ? 'Active' : 'Inactive' }}
-                        </span>
-                      </td>
                       <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
                           <button class="btn btn-sm btn-outline-warning fw-medium" style="min-width: 72px;"
@@ -333,13 +308,6 @@
                 [(ngModel)]="updateData.isQuarantine" name="isQuarantine" />
               <label class="form-check-label fw-medium" for="quarantineUpdate">Quarantine Bin</label>
               <div class="form-text text-warning small">⚠️ Cannot remove quarantine flag if bin has stock.</div>
-            </div>
-
-            <div class="mb-4 form-check">
-              <input type="checkbox" class="form-check-input" id="activeUpdate"
-                [(ngModel)]="updateData.isActive" name="isActive" />
-              <label class="form-check-label fw-medium" for="activeUpdate">Active</label>
-              <div class="form-text text-warning small">⚠️ Cannot deactivate if bin has inventory or open tasks.</div>
             </div>
 
             <div class="d-flex gap-2">

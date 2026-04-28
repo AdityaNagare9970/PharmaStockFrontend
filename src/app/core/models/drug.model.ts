@@ -7,7 +7,6 @@ export interface Drug {
   atccode: string;
   controlClass: number;
   storageClass: number;
-  status: boolean;
 }
 
 export interface CreateDrug {
@@ -18,7 +17,6 @@ export interface CreateDrug {
   atccode: string;
   controlClass: number;
   storageClass: number;
-  status: boolean;
 }
 
 export interface UpdateDrug {
@@ -29,5 +27,4 @@ export interface UpdateDrug {
   atccode: string;
   controlClass: number;
   storageClass: number;
-  status: boolean;
 }

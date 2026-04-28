@@ -19,7 +19,6 @@ export class BinService {
       storageClass:      raw.storageClass      ?? raw.StorageClass      ?? '',
       isQuarantine:      raw.isQuarantine      ?? raw.IsQuarantine      ?? false,
       maxCapacity:       raw.maxCapacity       ?? raw.MaxCapacity       ?? 0,
-      isActive:          raw.isActive          ?? raw.IsActive          ?? false,
     };
   }
 

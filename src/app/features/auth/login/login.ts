@@ -6,11 +6,11 @@ import { LoginRequest } from '../../../core/models/auth.model';
 import { finalize } from 'rxjs';
 
 const ROLE_ROUTES: Record<string, string> = {
-  'Admin': '/admin',
-  'Procurement Officer': '/procurement',
-  'Inventory Controller': '/inventory',
-  'Quality Officer': '/quality',
-  'Pharmacist': '/pharmacist'
+  'admin': '/admin',
+  'procurementofficer': '/procurement',
+  'inventorycontroller': '/ic',
+  'qualitycomplianceofficer': '/quality',
+  'pharmacist': '/pharmacist'
 };
 
 @Component({
@@ -24,7 +24,14 @@ export class Login {
   errorMessage = signal('');
   isLoading = signal(false);
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) {
+    // Already logged in → redirect to role-specific dashboard
+    if (authService.isLoggedIn()) {
+      const role = authService.getRole().toLowerCase().replace(/\s+/g, '');
+      const route = ROLE_ROUTES[role] ?? '/auth/login';
+      router.navigate([route]);
+    }
+  }
 
   onSubmit() {
     if (!this.credentials.username || !this.credentials.password) {
@@ -40,7 +47,9 @@ export class Login {
       .subscribe({
         next: (res) => {
           this.authService.saveToken(res.token);
-          const route = ROLE_ROUTES[res.role] ?? '/auth/login';
+          this.authService.saveRole(res.role);
+          const role = res.role.toLowerCase().replace(/\s+/g, '');
+          const route = ROLE_ROUTES[role] ?? '/auth/login';
           this.router.navigate([route]);
         },
         error: (err) => {

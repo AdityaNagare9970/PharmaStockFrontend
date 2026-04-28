@@ -63,7 +63,7 @@ export class UserComponent implements OnInit {
   // Update form (pre-filled from row click)
   updateData: UpsertUser = {
     userId: 0, username: '', roleId: 0,
-    email: '', phone: '', adminName: '', isCreate: false
+    email: '', phone: '', adminName: '', isCreate: false, statusId: true
   };
 
   // Feedback
@@ -166,7 +166,8 @@ export class UserComponent implements OnInit {
       email:     user.email,
       phone:     user.phone,
       adminName: this.loggedInUsername,
-      isCreate:  false
+      isCreate:  false,
+      statusId:  user.statusId,
     };
     this.setView('update');
     window.scrollTo({ top: 0, behavior: 'smooth' });

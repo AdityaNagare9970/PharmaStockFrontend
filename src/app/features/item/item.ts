@@ -3,11 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ItemService } from '../../core/services/item.service';
 import { DrugService } from '../../core/services/drug.service';
+import { LookupService, UomEntry } from '../../core/services/lookup.service';
 import { Item, CreateItem } from '../../core/models/item.model';
 import { Drug } from '../../core/models/drug.model';
 
 type ActiveView = 'list' | 'add' | 'update';
-type StatusFilter = 'all' | 'active' | 'inactive';
 
 @Component({
   selector: 'app-item',
@@ -20,11 +20,11 @@ export class ItemComponent implements OnInit {
   activeView = signal<ActiveView>('list');
   items      = signal<Item[]>([]);
   drugs      = signal<Drug[]>([]);
+  uoms       = signal<UomEntry[]>([]);
 
   // ── Filter signals ────────────────────────────────────
   searchQuery   = signal('');
   filterDrugId  = signal<number | ''>('');
-  filterStatus  = signal<StatusFilter>('all');
 
   // ── Filtered result ───────────────────────────────────
   filteredItems = computed(() => {
@@ -42,29 +42,24 @@ export class ItemComponent implements OnInit {
     const drugId = this.filterDrugId();
     if (drugId !== '') result = result.filter(i => i.drugId === drugId);
 
-    const status = this.filterStatus();
-    if (status === 'active')   result = result.filter(i =>  i.status);
-    if (status === 'inactive') result = result.filter(i => !i.status);
-
     return result;
   });
 
   hasActiveFilters = computed(() =>
     this.searchQuery()  !== '' ||
-    this.filterDrugId() !== '' ||
-    this.filterStatus() !== 'all'
+    this.filterDrugId() !== ''
   );
 
   // ── Add form ──────────────────────────────────────────
   newItem: CreateItem = {
-    drugId: 0, packSize: null, uoM: 0,
-    conversionToEach: 1, barcode: '', status: true
+    drugId: 0, packSize: null, uoMId: 0,
+    conversionToEach: 1, barcode: ''
   };
 
   // ── Update form ───────────────────────────────────────
   updateData: Item = {
-    itemId: 0, drugId: 0, packSize: null, uoM: 0,
-    conversionToEach: 1, barcode: '', status: true
+    itemId: 0, drugId: 0, drugName: '', packSize: null, uoMId: 0,
+    uoMCode: '', conversionToEach: 1, barcode: ''
   };
 
   // ── Delete confirmation ───────────────────────────────
@@ -78,15 +73,22 @@ export class ItemComponent implements OnInit {
 
   constructor(
     private itemService: ItemService,
-    private drugService: DrugService
+    private drugService: DrugService,
+    private lookupService: LookupService
   ) {}
 
   ngOnInit() {
     this.loadAll();
     this.loadDrugs();
+    this.loadUoms();
   }
 
   // ── Helpers ──────────────────────────────────────────
+
+  getUomName(id: number): string {
+    const uom = this.uoms().find(u => u.id === id);
+    return uom ? `${uom.code} — ${uom.description}` : `UoM ${id}`;
+  }
 
   getDrugName(drugId: number): string {
     const drug = this.drugs().find(d => d.drugId === drugId);
@@ -96,7 +98,6 @@ export class ItemComponent implements OnInit {
   clearFilters() {
     this.searchQuery.set('');
     this.filterDrugId.set('');
-    this.filterStatus.set('all');
   }
 
   clearMessages() {
@@ -129,11 +130,18 @@ export class ItemComponent implements OnInit {
     });
   }
 
+  loadUoms() {
+    this.lookupService.getUoms().subscribe({
+      next:  (data) => this.uoms.set(data),
+      error: () => {}
+    });
+  }
+
   // ── Add ──────────────────────────────────────────────
 
   addItem() {
     if (!this.newItem.drugId)              { this.errorMessage.set('Drug is required.'); return; }
-    if (!this.newItem.uoM)                 { this.errorMessage.set('Unit of measure is required.'); return; }
+    if (!this.newItem.uoMId)                 { this.errorMessage.set('Unit of measure is required.'); return; }
     if (!this.newItem.barcode.trim())      { this.errorMessage.set('Barcode is required.'); return; }
     if (this.newItem.conversionToEach <= 0) { this.errorMessage.set('Conversion to each must be greater than 0.'); return; }
 
@@ -144,7 +152,7 @@ export class ItemComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.successMessage.set(res.message || 'Item created successfully!');
-          this.newItem = { drugId: 0, packSize: null, uoM: 0, conversionToEach: 1, barcode: '', status: true };
+          this.newItem = { drugId: 0, packSize: null, uoMId: 0, conversionToEach: 1, barcode: '' };
           this.loadAll();
           this.setView('list');
         },
@@ -162,7 +170,7 @@ export class ItemComponent implements OnInit {
 
   updateItem() {
     if (!this.updateData.drugId)               { this.errorMessage.set('Drug is required.'); return; }
-    if (!this.updateData.uoM)                  { this.errorMessage.set('Unit of measure is required.'); return; }
+    if (!this.updateData.uoMId)                  { this.errorMessage.set('Unit of measure is required.'); return; }
     if (!this.updateData.barcode.trim())       { this.errorMessage.set('Barcode is required.'); return; }
     if (this.updateData.conversionToEach <= 0) { this.errorMessage.set('Conversion to each must be greater than 0.'); return; }
 

@@ -23,26 +23,65 @@ export class AuthService {
     localStorage.setItem('token', token);
   }
 
+  saveRole(role: string) {
+    localStorage.setItem('role', role.toLowerCase());
+  }
+
+  getUsername(): string {
+    const token = this.getToken();
+    if (!token) return '';
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload['unique_name'] ?? payload['name'] ??
+             payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] ?? '';
+    } catch { return ''; }
+  }
+
   getToken(): string | null {
     return localStorage.getItem('token');
+  }
+
+  getRole(): string {
+    // 1. Check localStorage first
+    const stored = localStorage.getItem('role');
+    if (stored) return stored;
+
+    // 2. Fall back: decode role from JWT payload
+    const token = this.getToken();
+    if (!token) return '';
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+
+      // .NET JWT standard role claim
+      const role =
+        payload['role'] ??
+        payload['roles'] ??
+        payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ??
+        '';
+
+      const resolved = Array.isArray(role) ? role[0] : role;
+      if (resolved) {
+        // Cache it so future calls don't re-decode
+        this.saveRole(resolved);
+      }
+      return (resolved as string).toLowerCase();
+    } catch {
+      return '';
+    }
+  }
+
+  hasRole(...roles: string[]): boolean {
+    const current = this.getRole();
+    return roles.map(r => r.toLowerCase()).includes(current);
   }
 
   isLoggedIn(): boolean {
     return !!this.getToken();
   }
 
-  getRole(): string | null {
-    const token = this.getToken();
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.role ?? null;
-    } catch {
-      return null;
-    }
-  }
-
   logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
   }
 }

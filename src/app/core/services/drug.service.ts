@@ -16,16 +16,21 @@ export class DrugService {
       genericName:  raw.genericName  ?? raw.GenericName  ?? '',
       brandName:    raw.brandName    ?? raw.BrandName    ?? '',
       strength:     raw.strength     ?? raw.Strength     ?? '',
-      form:         raw.form         ?? raw.Form         ?? 0,
-      atccode:      raw.atccode      ?? raw.Atccode      ?? '',
-      controlClass: raw.controlClass ?? raw.ControlClass ?? 0,
-      storageClass: raw.storageClass ?? raw.StorageClass ?? 0,
-      status:       raw.status       ?? raw.Status       ?? false,
+      form:         raw.formId         ?? raw.FormId         ?? raw.form         ?? raw.Form         ?? 0,
+      atccode:      raw.atccode        ?? raw.Atccode        ?? '',
+      controlClass: raw.controlClassId ?? raw.ControlClassId ?? raw.controlClass ?? raw.ControlClass ?? 0,
+      storageClass: raw.storageClassId ?? raw.StorageClassId ?? raw.storageClass ?? raw.StorageClass ?? 0,
     };
   }
 
-  getAll() {
-    return this.http.get<any>(`${this.apiUrl}?PageSize=1000`).pipe(
+  getAll(filter?: { page?: number; pageSize?: number; genericName?: string; storageClass?: number; controlClass?: number; status?: boolean }) {
+    let params = `PageSize=${filter?.pageSize ?? 1000}`;
+    if (filter?.page)         params += `&Page=${filter.page}`;
+    if (filter?.genericName)  params += `&GenericName=${encodeURIComponent(filter.genericName)}`;
+    if (filter?.storageClass !== undefined) params += `&StorageClass=${filter.storageClass}`;
+    if (filter?.controlClass !== undefined) params += `&ControlClass=${filter.controlClass}`;
+    if (filter?.status       !== undefined) params += `&Status=${filter.status}`;
+    return this.http.get<any>(`${this.apiUrl}?${params}`).pipe(
       map(result => {
         const items: any[] = result.items ?? result.Items ?? result ?? [];
         return items.map(raw => this.normalize(raw));

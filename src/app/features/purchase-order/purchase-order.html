@@ -1,0 +1,218 @@
+<!-- ── Page Body ─────────────────────────────────────────────────────────── -->
+<div class="page-body">
+
+  @if (successMessage()) {
+    <div class="toast-bar toast-success">{{ successMessage() }}</div>
+  }
+  @if (errorMessage() && !showModal() && !showDeleteModal()) {
+    <div class="toast-bar toast-danger">{{ errorMessage() }}</div>
+  }
+
+  <div class="main-card">
+
+    <div class="card-head">
+      <h4 class="card-head-title">Purchase Order Management</h4>
+      <button class="btn-add" (click)="openAdd()">+ New PO</button>
+    </div>
+
+    <hr class="card-divider" />
+
+    <!-- Search Row -->
+    <div class="search-row">
+      <div class="search-field">
+        <label class="search-label">Vendor / PO ID</label>
+        <div class="search-input-wrap">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search by vendor name or PO ID..."
+            [ngModel]="searchVendor()"
+            (ngModelChange)="searchVendor.set($event)"
+            (keydown.enter)="$event.preventDefault()"
+            name="searchVendor"
+          />
+          @if (searchVendor()) {
+            <button type="button" class="search-clear-btn" (click)="clearSearch()" title="Clear">&#x2715;</button>
+          }
+        </div>
+      </div>
+      <button type="button" class="btn-search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16" style="margin-right:6px">
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+        </svg>
+        Search
+      </button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <span>Loading purchase orders...</span>
+      </div>
+    }
+
+    @if (!isLoading()) {
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>PO ID</th>
+              <th>VENDOR</th>
+              <th>LOCATION</th>
+              <th>ORDER DATE</th>
+              <th>EXPECTED DATE</th>
+              <th>STATUS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (filteredOrders().length === 0) {
+              <tr>
+                <td colspan="8" class="empty-state">
+                  @if (searchVendor()) { No orders match your search. }
+                  @else { No purchase orders found. Click <strong>+ New PO</strong> to get started. }
+                </td>
+              </tr>
+            } @else {
+              @for (order of filteredOrders(); track order.purchaseOrderId; let i = $index) {
+                <tr [class.row-due]="isDue(order.expectedDate, order.status)">
+                  <td class="row-num">{{ i + 1 }}</td>
+                  <td class="name-cell">PO-{{ order.purchaseOrderId }}</td>
+                  <td>{{ order.vendorName }}</td>
+                  <td>{{ getLocationName(order.locationId) }}</td>
+                  <td>{{ formatDate(order.orderDate) }}</td>
+                  <td>
+                    {{ formatDate(order.expectedDate) }}
+                    @if (isDue(order.expectedDate, order.status)) {
+                      <span class="due-tag">Overdue</span>
+                    }
+                  </td>
+                  <td>
+                    <span [class]="statusClass(order.status)">{{ order.status }}</span>
+                  </td>
+                  <td class="actions-cell">
+                    <button class="btn-edit" (click)="openEdit(order)">Edit</button>
+                    <button class="btn-delete" (click)="confirmDelete(order.purchaseOrderId)">Delete</button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- ── Add / Edit Modal ───────────────────────────────────────────────────── -->
+@if (showModal()) {
+  <div class="modal-overlay" (click)="closeModal()"></div>
+  <div class="modal-wrap">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>{{ isEditing() ? 'Edit Purchase Order' : 'Create Purchase Order' }}</span>
+        <button class="modal-close" (click)="closeModal()">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="saveOrder()" #poForm="ngForm">
+
+          @if (!isEditing()) {
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Vendor <span class="required">*</span></label>
+                <select class="field-input" [(ngModel)]="formVendorId" name="vendorId" required>
+                  <option [value]="0" disabled>— Select vendor —</option>
+                  @for (v of vendors(); track v.vendorId) {
+                    <option [value]="v.vendorId">{{ v.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Location <span class="required">*</span></label>
+                <select class="field-input" [(ngModel)]="formLocationId" name="locationId" required>
+                  <option [value]="0" disabled>— Select location —</option>
+                  @for (l of locations(); track l.locationId) {
+                    <option [value]="l.locationId">{{ l.name }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          }
+
+          @if (isEditing()) {
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Vendor</label>
+                <input class="field-input" [value]="getVendorName(formVendorId)" disabled />
+              </div>
+              <div class="field-group">
+                <label class="field-label">Location</label>
+                <input class="field-input" [value]="getLocationName(formLocationId)" disabled />
+              </div>
+            </div>
+          }
+
+          <div class="field-group">
+            <label class="field-label">Expected Date <span class="required">*</span></label>
+            <input type="date" class="field-input"
+              [(ngModel)]="formExpectedDate" name="expectedDate" required />
+          </div>
+
+          @if (isEditing() && statuses().length > 0) {
+            <div class="field-group">
+              <label class="field-label">Status</label>
+              <select class="field-input" [(ngModel)]="formStatusId" name="statusId">
+                @for (s of statuses(); track s.purchaseOrderStatusId) {
+                  <option [value]="s.purchaseOrderStatusId">{{ s.status }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          @if (errorMessage()) {
+            <div class="modal-error">{{ errorMessage() }}</div>
+          }
+
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn-save"
+              [disabled]="isSaving() || !formExpectedDate || (!isEditing() && (formVendorId < 1 || formLocationId < 1))">
+              @if (isSaving()) {
+                <span class="spinner-sm"></span> Saving...
+              } @else {
+                {{ isEditing() ? 'Update PO' : 'Create PO' }}
+              }
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Delete Confirm Modal ───────────────────────────────────────────────── -->
+@if (showDeleteModal()) {
+  <div class="modal-overlay" (click)="cancelDelete()"></div>
+  <div class="modal-wrap">
+    <div class="modal-box" style="max-width: 420px;">
+      <div class="modal-header">
+        <span>Delete Purchase Order</span>
+        <button class="modal-close" (click)="cancelDelete()">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0 0 0.5rem">Are you sure you want to delete this purchase order?</p>
+        <p style="margin:0 0 1.5rem; color:#6b7280; font-size:0.875rem">All linked purchase items will also be removed.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+          <button type="button" class="btn-delete-confirm" (click)="deleteOrder()" [disabled]="isDeleting()">
+            @if (isDeleting()) { <span class="spinner-sm"></span> Deleting... }
+            @else { Yes, Delete }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

@@ -1,20 +1,20 @@
 export interface Item {
   itemId: number;
   drugId: number;
+  drugName: string;
   packSize: number | null;
-  uoM: number;
+  uoMId: number;
+  uoMCode: string;
   conversionToEach: number;
   barcode: string;
-  status: boolean;
 }
 
 export interface CreateItem {
   drugId: number;
   packSize: number | null;
-  uoM: number;
+  uoMId: number;
   conversionToEach: number;
   barcode: string;
-  status: boolean;
 }
 
 export interface ItemCreateResponse {

@@ -1,0 +1,201 @@
+<!-- ── Page Body ─────────────────────────────────────────────────────────── -->
+<div class="page-body">
+
+  @if (successMessage()) {
+    <div class="toast-bar toast-success">{{ successMessage() }}</div>
+  }
+  @if (errorMessage() && !showModal() && !showDeleteModal()) {
+    <div class="toast-bar toast-danger">{{ errorMessage() }}</div>
+  }
+
+  <div class="main-card">
+
+    <div class="card-head">
+      <h4 class="card-head-title">Vendor Management</h4>
+      <button class="btn-add" (click)="openAdd()">+ Add Vendor</button>
+    </div>
+
+    <hr class="card-divider" />
+
+    <!-- Search Row -->
+    <div class="search-row">
+      <div class="search-field">
+        <label class="search-label">Vendor Name</label>
+        <div class="search-input-wrap">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search by vendor name..."
+            [ngModel]="searchName()"
+            (ngModelChange)="searchName.set($event)"
+            (keydown.enter)="$event.preventDefault()"
+            name="searchName"
+          />
+          @if (searchName()) {
+            <button type="button" class="search-clear-btn" (click)="clearSearch()" title="Clear search">&#x2715;</button>
+          }
+        </div>
+      </div>
+      <button type="button" class="btn-search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16" style="margin-right:6px">
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+        </svg>
+        Search
+      </button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <span>Loading vendors...</span>
+      </div>
+    }
+
+    @if (!isLoading()) {
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>VENDOR NAME</th>
+              <th>CONTACT INFO</th>
+              <th>EMAIL</th>
+              <th>PHONE</th>
+              <th>RATING</th>
+              <th>STATUS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (filteredVendors().length === 0) {
+              <tr>
+                <td colspan="8" class="empty-state">
+                  @if (searchName()) { No vendors match your search. }
+                  @else { No vendors found. Click <strong>+ Add Vendor</strong> to get started. }
+                </td>
+              </tr>
+            } @else {
+              @for (vendor of filteredVendors(); track vendor.vendorId; let i = $index) {
+                <tr>
+                  <td class="row-num">{{ i + 1 }}</td>
+                  <td class="name-cell">{{ vendor.name }}</td>
+                  <td>{{ vendor.contactInfo }}</td>
+                  <td>{{ vendor.email }}</td>
+                  <td>{{ vendor.phone }}</td>
+                  <td>{{ vendor.rating }}</td>
+                  <td>
+                    <span [class]="vendor.statusId ? 'badge-active' : 'badge-inactive'">
+                      {{ statusLabel(vendor.statusId) }}
+                    </span>
+                  </td>
+                  <td class="actions-cell">
+                    <button class="btn-edit" (click)="openEdit(vendor)">Edit</button>
+                    <button class="btn-delete" (click)="confirmDelete(vendor.vendorId)">Delete</button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- ── Add / Edit Modal ───────────────────────────────────────────────────── -->
+@if (showModal()) {
+  <div class="modal-overlay" (click)="closeModal()"></div>
+  <div class="modal-wrap">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>{{ isEditing() ? 'Edit Vendor' : 'Add New Vendor' }}</span>
+        <button class="modal-close" (click)="closeModal()">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="saveVendor()" #vendorForm="ngForm">
+
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Vendor Name <span class="required">*</span></label>
+              <input type="text" class="field-input" placeholder="e.g. MedSource Pharma"
+                [(ngModel)]="formName" name="name" required />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Contact Info <span class="required">*</span></label>
+              <input type="text" class="field-input" placeholder="e.g. John Smith / +1 555-0100"
+                [(ngModel)]="formContactInfo" name="contactInfo" required />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Email</label>
+              <input type="email" class="field-input" placeholder="contact@vendor.com"
+                [(ngModel)]="formEmail" name="email" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Phone</label>
+              <input type="text" class="field-input" placeholder="+1 555-0100"
+                [(ngModel)]="formPhone" name="phone" />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Rating (0–5)</label>
+            <input type="number" class="field-input" placeholder="0" min="0" max="5"
+              [(ngModel)]="formRating" name="rating" />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Status</label>
+            <select class="field-input" [(ngModel)]="formStatusId" name="statusId">
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
+          </div>
+
+          @if (errorMessage()) {
+            <div class="modal-error">{{ errorMessage() }}</div>
+          }
+
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn-save" [disabled]="isSaving() || !formName.trim() || !formContactInfo.trim()">
+              @if (isSaving()) {
+                <span class="spinner-sm"></span> Saving...
+              } @else {
+                {{ isEditing() ? 'Update Vendor' : 'Add Vendor' }}
+              }
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Delete Confirm Modal ───────────────────────────────────────────────── -->
+@if (showDeleteModal()) {
+  <div class="modal-overlay" (click)="cancelDelete()"></div>
+  <div class="modal-wrap">
+    <div class="modal-box" style="max-width: 420px;">
+      <div class="modal-header">
+        <span>Delete Vendor</span>
+        <button class="modal-close" (click)="cancelDelete()">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0 0 0.5rem">Are you sure you want to delete this vendor?</p>
+        <p style="margin:0 0 1.5rem; color:#6b7280; font-size:0.875rem">This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+          <button type="button" class="btn-delete-confirm" (click)="deleteVendor()" [disabled]="isDeleting()">
+            @if (isDeleting()) { <span class="spinner-sm"></span> Deleting... }
+            @else { Yes, Delete }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

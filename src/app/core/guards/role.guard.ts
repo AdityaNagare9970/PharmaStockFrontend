@@ -1,32 +1,18 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
-const ROLE_ROUTES: Record<string, string> = {
-  'Admin': '/admin',
-  'Procurement Officer': '/procurement',
-  'Inventory Controller': '/inventory',
-  'Quality Officer': '/quality',
-  'Pharmacist': '/pharmacist'
-};
+export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, _state: RouterStateSnapshot) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
 
-export const roleGuard = (allowedRole: string): CanActivateFn => {
-  return () => {
-    const router = inject(Router);
-    const token = localStorage.getItem('token');
+  const allowedRoles: string[] = route.data['roles'] ?? [];
 
-    if (!token) {
-      return router.createUrlTree(['/auth/login']);
-    }
+  // No roles defined on route → allow all authenticated users
+  if (allowedRoles.length === 0) return true;
 
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.role === allowedRole) {
-        return true;
-      }
-      // Wrong role — send them to their own dashboard
-      return router.createUrlTree([ROLE_ROUTES[payload.role] ?? '/auth/login']);
-    } catch {
-      return router.createUrlTree(['/auth/login']);
-    }
-  };
+  if (authService.hasRole(...allowedRoles)) return true;
+
+  // Role not allowed → redirect to login
+  return router.createUrlTree(['/auth/login']);
 };

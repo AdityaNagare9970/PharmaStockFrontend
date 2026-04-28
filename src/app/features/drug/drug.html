@@ -76,8 +76,8 @@
               (ngModelChange)="filterForm.set($event === '' ? '' : +$event)"
               name="filterForm">
               <option value="">All Forms</option>
-              @for (f of uniqueForms(); track f) {
-                <option [value]="f">Form {{ f }}</option>
+              @for (entry of drugForms(); track entry.id) {
+                <option [value]="entry.id">{{ entry.name }}</option>
               }
             </select>
           </div>
@@ -90,22 +90,9 @@
               (ngModelChange)="filterControl.set($event === '' ? '' : +$event)"
               name="filterControl">
               <option value="">All</option>
-              @for (c of uniqueControlClasses(); track c) {
-                <option [value]="c">Class {{ c }}</option>
+              @for (entry of controlClasses(); track entry.id) {
+                <option [value]="entry.id">{{ entry.name }}</option>
               }
-            </select>
-          </div>
-
-          <!-- Status Filter -->
-          <div class="col-6 col-md-2">
-            <label class="form-label small fw-medium text-muted mb-1">🔘 Status</label>
-            <select class="form-select form-select-sm"
-              [ngModel]="filterStatus()"
-              (ngModelChange)="filterStatus.set($event)"
-              name="filterStatus">
-              <option value="all">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
             </select>
           </div>
 
@@ -130,10 +117,6 @@
               <span class="badge bg-white text-primary ms-2">{{ filteredDrugs().length }} result(s)</span>
             }
           </span>
-          <button class="btn btn-light btn-sm" (click)="loadAll()" [disabled]="isLoading()">
-            @if (isLoading()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-            Refresh
-          </button>
         </div>
 
         <div class="card-body p-0">
@@ -163,7 +146,6 @@
                     <th>Control Class</th>
                     <th>Storage Class</th>
                     <th>ATC Code</th>
-                    <th>Status</th>
                     <th class="text-center">Actions</th>
                   </tr>
                 </thead>
@@ -174,17 +156,10 @@
                       <td class="fw-medium">{{ drug.genericName }}</td>
                       <td class="text-muted small">{{ drug.brandName || '—' }}</td>
                       <td class="text-muted small">{{ drug.strength }}</td>
-                      <td class="text-muted small">{{ drug.form }}</td>
-                      <td class="text-muted small">{{ drug.controlClass }}</td>
-                      <td class="text-muted small">{{ drug.storageClass }}</td>
+                      <td class="text-muted small">{{ getFormName(drug.form) }}</td>
+                      <td class="text-muted small">{{ getControlClassName(drug.controlClass) }}</td>
+                      <td class="text-muted small">{{ getStorageClassName(drug.storageClass) }}</td>
                       <td class="text-muted small">{{ drug.atccode || '—' }}</td>
-                      <td>
-                        <span class="badge rounded-pill"
-                          [class.bg-success]="drug.status"
-                          [class.bg-secondary]="!drug.status">
-                          {{ drug.status ? 'Active' : 'Inactive' }}
-                        </span>
-                      </td>
                       <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
                           <button class="btn btn-sm btn-outline-warning fw-medium" style="min-width: 72px;"
@@ -234,33 +209,39 @@
 
             <div class="row g-3 mb-3">
               <div class="col-6">
-                <label class="form-label fw-medium">Form ID <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" placeholder="e.g. 1"
-                  [(ngModel)]="newDrug.form" name="form" min="1" required />
+                <label class="form-label fw-medium">Form <span class="text-danger">*</span></label>
+                <select class="form-select" [(ngModel)]="newDrug.form" name="form" required>
+                  <option [value]="0" disabled>Select a form...</option>
+                  @for (entry of drugForms(); track entry.id) {
+                    <option [value]="entry.id">{{ entry.name }}</option>
+                  }
+                </select>
               </div>
               <div class="col-6">
-                <label class="form-label fw-medium">Control Class ID <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" placeholder="e.g. 1"
-                  [(ngModel)]="newDrug.controlClass" name="controlClass" min="1" required />
+                <label class="form-label fw-medium">Control Class <span class="text-danger">*</span></label>
+                <select class="form-select" [(ngModel)]="newDrug.controlClass" name="controlClass" required>
+                  <option [value]="0" disabled>Select a class...</option>
+                  @for (entry of controlClasses(); track entry.id) {
+                    <option [value]="entry.id">{{ entry.name }}</option>
+                  }
+                </select>
               </div>
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-medium">Storage Class ID <span class="text-danger">*</span></label>
-              <input type="number" class="form-control" placeholder="e.g. 1"
-                [(ngModel)]="newDrug.storageClass" name="storageClass" min="1" required />
+              <label class="form-label fw-medium">Storage Class <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="newDrug.storageClass" name="storageClass" required>
+                <option [value]="0" disabled>Select a storage class...</option>
+                @for (entry of storageClasses(); track entry.id) {
+                  <option [value]="entry.id">{{ entry.name }}</option>
+                }
+              </select>
             </div>
 
             <div class="mb-3">
               <label class="form-label fw-medium">ATC Code <span class="text-muted small fw-normal">(optional)</span></label>
               <input type="text" class="form-control" placeholder="e.g. N02BE01"
                 [(ngModel)]="newDrug.atccode" name="atccode" />
-            </div>
-
-            <div class="mb-4 form-check">
-              <input type="checkbox" class="form-check-input" id="statusAdd"
-                [(ngModel)]="newDrug.status" name="status" />
-              <label class="form-check-label fw-medium" for="statusAdd">Active</label>
             </div>
 
             <div class="d-flex gap-2">
@@ -308,33 +289,36 @@
 
             <div class="row g-3 mb-3">
               <div class="col-6">
-                <label class="form-label fw-medium">Form ID <span class="text-danger">*</span></label>
-                <input type="number" class="form-control"
-                  [(ngModel)]="updateData.form" name="form" min="1" required />
+                <label class="form-label fw-medium">Form <span class="text-danger">*</span></label>
+                <select class="form-select" [(ngModel)]="updateData.form" name="form" required>
+                  @for (entry of drugForms(); track entry.id) {
+                    <option [value]="entry.id">{{ entry.name }}</option>
+                  }
+                </select>
               </div>
               <div class="col-6">
-                <label class="form-label fw-medium">Control Class ID <span class="text-danger">*</span></label>
-                <input type="number" class="form-control"
-                  [(ngModel)]="updateData.controlClass" name="controlClass" min="1" required />
+                <label class="form-label fw-medium">Control Class <span class="text-danger">*</span></label>
+                <select class="form-select" [(ngModel)]="updateData.controlClass" name="controlClass" required>
+                  @for (entry of controlClasses(); track entry.id) {
+                    <option [value]="entry.id">{{ entry.name }}</option>
+                  }
+                </select>
               </div>
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-medium">Storage Class ID <span class="text-danger">*</span></label>
-              <input type="number" class="form-control"
-                [(ngModel)]="updateData.storageClass" name="storageClass" min="1" required />
+              <label class="form-label fw-medium">Storage Class <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="updateData.storageClass" name="storageClass" required>
+                @for (entry of storageClasses(); track entry.id) {
+                  <option [value]="entry.id">{{ entry.name }}</option>
+                }
+              </select>
             </div>
 
             <div class="mb-3">
               <label class="form-label fw-medium">ATC Code <span class="text-muted small fw-normal">(optional)</span></label>
               <input type="text" class="form-control"
                 [(ngModel)]="updateData.atccode" name="atccode" />
-            </div>
-
-            <div class="mb-4 form-check">
-              <input type="checkbox" class="form-check-input" id="statusUpdate"
-                [(ngModel)]="updateData.status" name="status" />
-              <label class="form-check-label fw-medium" for="statusUpdate">Active</label>
             </div>
 
             <div class="d-flex gap-2">

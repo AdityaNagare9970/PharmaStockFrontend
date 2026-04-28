@@ -35,4 +35,5 @@ export interface UpsertUser {
   phone: string;
   adminName: string;
   isCreate: boolean;
+  statusId?: boolean;
 }

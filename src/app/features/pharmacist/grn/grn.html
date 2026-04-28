@@ -1,0 +1,510 @@
+<div class="space-y-5 p-6">
+
+  <!-- Success toasts -->
+  @if (createSuccess()) {
+    <div class="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-green-800 text-sm font-medium">
+      <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      {{ createSuccess() }}
+    </div>
+  }
+  @if (qcSuccess()) {
+    <div class="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-green-800 text-sm font-medium">
+      <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      {{ qcSuccess() }}
+    </div>
+  }
+
+  <!-- ══════════════════════════════════════════════
+       CREATE GRN FULL VIEW
+  ══════════════════════════════════════════════ -->
+  @if (showCreatePanel()) {
+
+    <!-- Back header -->
+    <div class="flex items-center gap-3">
+      <button (click)="closeCreatePanel()"
+        class="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 font-medium">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to Pending GRN
+      </button>
+    </div>
+
+    <div class="bg-cyan-600 rounded-2xl px-6 py-5">
+      <h2 class="text-xl font-bold text-white">Create Goods Receipt Note</h2>
+      <p class="text-cyan-100 text-sm mt-0.5">PO-{{ selectedPO()?.purchaseOrderId }} — {{ selectedPO()?.vendorName }}</p>
+    </div>
+
+    <!-- PO info -->
+    <div class="bg-cyan-50 border border-cyan-200 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+      <div><p class="text-gray-400 text-xs">Location</p><p class="font-semibold text-gray-800">{{ selectedPO()?.locationName }}</p></div>
+      <div><p class="text-gray-400 text-xs">Expected</p><p class="font-semibold text-gray-800">{{ formatDate(selectedPO()?.expectedDate ?? '') }}</p></div>
+      <div><p class="text-gray-400 text-xs">Vendor</p><p class="font-semibold text-gray-800">{{ selectedPO()?.vendorName }}</p></div>
+      <div><p class="text-gray-400 text-xs">Items</p><p class="font-semibold text-gray-800">{{ selectedPO()?.itemCount }}</p></div>
+    </div>
+
+    <!-- Receipt header fields -->
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+      <h3 class="text-sm font-bold text-gray-700 mb-4">Receipt Information</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Received By <span class="text-red-500">*</span></label>
+          <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            [(ngModel)]="formReceivedBy" placeholder="Your name" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Received Date <span class="text-red-500">*</span></label>
+          <input type="date" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            [(ngModel)]="formReceivedDate" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+      <h3 class="text-sm font-bold text-gray-700 mb-4">Item Receipt Details</h3>
+      @if (loadingPODetails()) {
+        <div class="flex items-center justify-center py-8">
+          <div class="w-6 h-6 border-4 border-cyan-600 border-t-transparent rounded-full animate-spin"></div>
+          <span class="ml-2 text-sm text-gray-500">Loading items...</span>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          @for (item of grnFormItems(); track item.purchaseItemId; let i = $index) {
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+              <div class="flex flex-wrap items-center gap-2 mb-3">
+                <span class="font-semibold text-gray-800 text-sm">{{ item.itemName }}</span>
+                <span class="text-xs text-gray-500 bg-white border border-gray-200 rounded px-2 py-0.5">Ordered: {{ item.orderedQty }}</span>
+                <span class="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5">Received so far: {{ item.acceptedQty }}</span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded border"
+                  [class]="item.outstandingQty > 0 ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-gray-400 bg-gray-50 border-gray-200'">
+                  Outstanding: {{ item.outstandingQty }}
+                </span>
+              </div>
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Batch No. <span class="text-red-500">*</span></label>
+                  <input type="text" class="w-full px-2.5 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    [value]="item.batchNumber"
+                    (input)="updateGrnFormItem(i, 'batchNumber', getVal($event))"
+                    placeholder="e.g. B2025" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Expiry Date <span class="text-red-500">*</span></label>
+                  <input type="date" class="w-full px-2.5 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    [value]="item.expiryDate"
+                    (change)="updateGrnFormItem(i, 'expiryDate', getVal($event))" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Received Qty <span class="text-red-500">*</span></label>
+                  <input type="number" class="w-full px-2.5 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    [value]="item.receivedQty" min="1"
+                    (input)="updateGrnFormItem(i, 'receivedQty', getVal($event))" />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    @if (createError()) {
+      <div class="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        {{ createError() }}
+      </div>
+    }
+
+    <div class="flex gap-3">
+      <button (click)="closeCreatePanel()"
+        class="px-6 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-100 font-medium">
+        Cancel
+      </button>
+      <button (click)="submitGrn()" [disabled]="savingGrn() || loadingPODetails()"
+        class="px-8 py-2.5 bg-cyan-600 text-white rounded-xl text-sm font-semibold hover:bg-cyan-700 disabled:opacity-50 flex items-center gap-2">
+        @if (savingGrn()) {
+          <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          Saving...
+        } @else {
+          Submit GRN
+        }
+      </button>
+    </div>
+
+  }
+
+  <!-- ══════════════════════════════════════════════
+       QC FULL VIEW
+  ══════════════════════════════════════════════ -->
+  @else if (showQcPanel()) {
+
+    <div class="flex items-center gap-3">
+      <button (click)="closeQcPanel()"
+        class="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 font-medium">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to Pending QC
+      </button>
+    </div>
+
+    <div class="bg-amber-500 rounded-2xl px-6 py-5">
+      <h2 class="text-xl font-bold text-white">Quality Check</h2>
+      <p class="text-amber-100 text-sm mt-0.5">GRN-{{ selectedGrn()?.goodsReceiptId }} — {{ selectedGrn()?.vendorName }}</p>
+    </div>
+
+    <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800">
+      <strong>Instructions:</strong> Enter accepted and rejected quantities for each item.
+      Accepted + Rejected must equal Received. Rejection reason is mandatory when rejecting any quantity.
+    </div>
+
+    @if (loadingGrnDetail()) {
+      <div class="flex items-center justify-center py-12">
+        <div class="w-7 h-7 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+        <span class="ml-2 text-sm text-gray-500">Loading items...</span>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        @for (item of qcFormItems(); track item.goodsReceiptItemId; let i = $index) {
+          <div class="bg-white border border-gray-200 rounded-xl p-5">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-semibold text-gray-800">{{ item.itemName }}</span>
+              <span class="text-xs text-gray-500 bg-gray-100 rounded px-2 py-0.5">Batch: {{ item.batchNumber }}</span>
+            </div>
+            <p class="text-xs text-gray-400 mb-4">Expiry: {{ formatDate(item.expiryDate) }} &nbsp;|&nbsp; Received: <strong>{{ item.receivedQty }}</strong></p>
+
+            <div class="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label class="block text-xs font-semibold text-green-700 mb-1.5">✓ Accepted Qty</label>
+                <input type="number" class="w-full px-3 py-2.5 border border-green-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 bg-green-50"
+                  [value]="item.acceptedQty" min="0" [max]="item.receivedQty"
+                  (input)="updateQcItem(i, 'acceptedQty', getVal($event))" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-red-700 mb-1.5">✗ Rejected Qty</label>
+                <input type="number" class="w-full px-3 py-2.5 border border-red-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-red-50"
+                  [value]="item.rejectedQty" min="0" [max]="item.receivedQty"
+                  (input)="updateQcItem(i, 'rejectedQty', getVal($event))" />
+              </div>
+            </div>
+
+            @if (item.rejectedQty > 0) {
+              <div class="mb-3">
+                <label class="block text-xs font-semibold text-red-700 mb-1.5">Rejection Reason <span class="text-red-500">*</span></label>
+                <input type="text" class="w-full px-3 py-2.5 border border-red-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                  [value]="item.rejectionReason"
+                  (input)="updateQcItem(i, 'rejectionReason', getVal($event))"
+                  placeholder="e.g. Damaged packaging, expired..." />
+              </div>
+            }
+
+            <div class="text-xs font-medium mt-2"
+              [class]="(item.acceptedQty + item.rejectedQty) === item.receivedQty ? 'text-green-600' : 'text-red-500'">
+              Total: {{ item.acceptedQty + item.rejectedQty }} / {{ item.receivedQty }}
+              {{ (item.acceptedQty + item.rejectedQty) === item.receivedQty ? '✓ Valid' : '✗ Must equal received qty' }}
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (qcError()) {
+      <div class="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        {{ qcError() }}
+      </div>
+    }
+
+    <div class="flex gap-3">
+      <button (click)="closeQcPanel()"
+        class="px-6 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-100 font-medium">
+        Cancel
+      </button>
+      <button (click)="submitQc()" [disabled]="savingQc() || loadingGrnDetail()"
+        class="px-8 py-2.5 bg-amber-500 text-white rounded-xl text-sm font-semibold hover:bg-amber-600 disabled:opacity-50 flex items-center gap-2">
+        @if (savingQc()) {
+          <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          Completing...
+        } @else {
+          Complete QC &amp; Update Stock
+        }
+      </button>
+    </div>
+
+  }
+
+  <!-- ══════════════════════════════════════════════
+       VIEW GRN DETAIL FULL VIEW
+  ══════════════════════════════════════════════ -->
+  @else if (showViewPanel()) {
+
+    <div class="flex items-center gap-3">
+      <button (click)="closeViewPanel()"
+        class="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 font-medium">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to GRN History
+      </button>
+    </div>
+
+    <div class="bg-gray-700 rounded-2xl px-6 py-5">
+      <h2 class="text-xl font-bold text-white">GRN Details</h2>
+    </div>
+
+    @if (loadingViewDetail()) {
+      <div class="flex items-center justify-center py-12">
+        <div class="w-7 h-7 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    } @else if (viewingGrn()) {
+      <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+        <div><span class="text-gray-400">Location:</span> <span class="font-medium ml-1">{{ viewingGrn()!.locationName }}</span></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        @for (item of viewingGrn()!.items; track item.goodsReceiptItemId) {
+          <div class="bg-white border border-gray-200 rounded-xl p-5">
+            <div class="flex justify-between items-start mb-1">
+              <span class="font-semibold text-gray-800">{{ item.itemName }}</span>
+              <span class="text-xs text-gray-500 bg-gray-100 rounded px-2 py-0.5">Batch: {{ item.batchNumber }}</span>
+            </div>
+            <p class="text-xs text-gray-400 mb-4">Expiry: {{ formatDate(item.expiryDate) }}</p>
+            <div class="grid grid-cols-4 gap-2 text-center text-xs">
+              <div class="bg-gray-50 rounded-lg py-2"><p class="text-gray-400">Ordered</p><p class="font-bold text-gray-700 text-base mt-0.5">{{ item.orderedQty }}</p></div>
+              <div class="bg-blue-50 rounded-lg py-2"><p class="text-blue-400">Received</p><p class="font-bold text-blue-600 text-base mt-0.5">{{ item.receivedQty }}</p></div>
+              <div class="bg-green-50 rounded-lg py-2"><p class="text-green-500">Accepted</p><p class="font-bold text-green-600 text-base mt-0.5">{{ item.acceptedQty }}</p></div>
+              <div class="bg-red-50 rounded-lg py-2"><p class="text-red-400">Rejected</p><p class="font-bold text-red-500 text-base mt-0.5">{{ item.rejectedQty }}</p></div>
+            </div>
+            @if (item.rejectionReason) {
+              <p class="mt-3 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                <strong>Reason:</strong> {{ item.rejectionReason }}
+              </p>
+            }
+          </div>
+        }
+      </div>
+    }
+
+  }
+
+  <!-- ══════════════════════════════════════════════
+       NORMAL TAB VIEWS
+  ══════════════════════════════════════════════ -->
+  @else {
+
+    <!-- Header + Tabs -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <h2 class="text-xl font-bold text-gray-800">Goods Receipt (GRN)</h2>
+        <p class="text-gray-500 text-sm mt-0.5">Receive goods from vendors and complete quality check</p>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <button (click)="activeTab.set('pending')"
+          [class]="activeTab() === 'pending'
+            ? 'px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-semibold shadow-sm'
+            : 'px-4 py-2 bg-white border border-gray-300 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50'">
+          Pending GRN
+          @if (pendingPOs().length > 0) {
+            <span class="ml-1.5 bg-white text-cyan-700 text-xs px-1.5 py-0.5 rounded-full font-bold">{{ pendingPOs().length }}</span>
+          }
+        </button>
+        <button (click)="activeTab.set('qc')"
+          [class]="activeTab() === 'qc'
+            ? 'px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-semibold shadow-sm'
+            : 'px-4 py-2 bg-white border border-gray-300 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50'">
+          Pending QC
+          @if (pendingQcGrns().length > 0) {
+            <span class="ml-1.5 bg-white text-amber-700 text-xs px-1.5 py-0.5 rounded-full font-bold">{{ pendingQcGrns().length }}</span>
+          }
+        </button>
+        <button (click)="activeTab.set('history')"
+          [class]="activeTab() === 'history'
+            ? 'px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-semibold shadow-sm'
+            : 'px-4 py-2 bg-white border border-gray-300 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50'">
+          GRN History
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 1: PENDING GRN -->
+    @if (activeTab() === 'pending') {
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        @if (loadingPending()) {
+          <div class="flex items-center justify-center py-12">
+            <div class="w-7 h-7 border-4 border-cyan-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        } @else if (pendingPOs().length === 0) {
+          <div class="text-center py-14">
+            <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <p class="text-gray-600 font-semibold">No approved POs pending GRN</p>
+            <p class="text-gray-400 text-sm mt-1">All approved purchase orders have been received.</p>
+          </div>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-gray-50 border-b border-gray-100">
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">PO #</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Vendor</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Location</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Order Date</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Expected</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Items</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-50">
+                @for (po of pendingPOs(); track po.purchaseOrderId) {
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3 font-semibold text-cyan-700">PO-{{ po.purchaseOrderId }}</td>
+                    <td class="px-4 py-3 font-medium text-gray-800">{{ po.vendorName }}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs">{{ po.locationName }}</td>
+                    <td class="px-4 py-3 text-gray-400 text-xs">{{ formatDate(po.orderDate) }}</td>
+                    <td class="px-4 py-3 text-gray-400 text-xs">{{ formatDate(po.expectedDate) }}</td>
+                    <td class="px-4 py-3">
+                      <span class="inline-flex px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-semibold">{{ po.itemCount }} items</span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <button (click)="openCreateGrn(po)"
+                        class="px-3 py-1.5 bg-cyan-600 text-white text-xs font-semibold rounded-lg hover:bg-cyan-700 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Create GRN
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- TAB 2: PENDING QC -->
+    @if (activeTab() === 'qc') {
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        @if (loadingQc()) {
+          <div class="flex items-center justify-center py-12">
+            <div class="w-7 h-7 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        } @else if (pendingQcGrns().length === 0) {
+          <div class="text-center py-14">
+            <p class="text-gray-600 font-semibold">No GRNs pending QC</p>
+            <p class="text-gray-400 text-sm mt-1">Receive goods first from the Pending GRN tab.</p>
+          </div>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-gray-50 border-b border-gray-100">
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">GRN #</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">PO #</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Vendor</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Received By</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Received Date</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-50">
+                @for (grn of pendingQcGrns(); track grn.goodsReceiptId) {
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3 font-semibold text-amber-700">GRN-{{ grn.goodsReceiptId }}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs">PO-{{ grn.purchaseOrderId }}</td>
+                    <td class="px-4 py-3 font-medium text-gray-800">{{ grn.vendorName }}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs">{{ grn.receivedBy }}</td>
+                    <td class="px-4 py-3 text-gray-400 text-xs">{{ formatDate(grn.receivedDate) }}</td>
+                    <td class="px-4 py-3">
+                      <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold" [class]="statusClass(grn.status)">{{ grn.status }}</span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <button (click)="openQc(grn)"
+                        class="px-3 py-1.5 bg-amber-500 text-white text-xs font-semibold rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Complete QC
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- TAB 3: GRN HISTORY -->
+    @if (activeTab() === 'history') {
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        @if (loadingHistory()) {
+          <div class="flex items-center justify-center py-12">
+            <div class="w-7 h-7 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        } @else if (allGrns().length === 0) {
+          <div class="text-center py-14">
+            <p class="text-gray-600 font-semibold">No GRN records yet</p>
+            <p class="text-gray-400 text-sm mt-1">Create a GRN from the Pending GRN tab.</p>
+          </div>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-gray-50 border-b border-gray-100">
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">GRN #</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">PO #</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Vendor</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Received By</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Date</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Items</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                  <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-50">
+                @for (grn of allGrns(); track grn.goodsReceiptId) {
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3 font-semibold text-gray-700">GRN-{{ grn.goodsReceiptId }}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs">PO-{{ grn.purchaseOrderId }}</td>
+                    <td class="px-4 py-3 font-medium text-gray-800">{{ grn.vendorName }}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs">{{ grn.receivedBy }}</td>
+                    <td class="px-4 py-3 text-gray-400 text-xs">{{ formatDate(grn.receivedDate) }}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs text-center">{{ grn.itemCount }}</td>
+                    <td class="px-4 py-3">
+                      <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold" [class]="statusClass(grn.status)">{{ grn.status }}</span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <button (click)="openViewGrn(grn)"
+                        class="px-3 py-1.5 border border-gray-300 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-100 transition-colors">
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="px-4 py-2.5 border-t border-gray-100 text-xs text-gray-400">
+            {{ allGrns().length }} total GRNs
+          </div>
+        }
+      </div>
+    }
+
+  }
+
+</div>

@@ -7,7 +7,6 @@ export interface Bin {
   storageClass: string;
   isQuarantine: boolean;
   maxCapacity: number;
-  isActive: boolean;
 }
 
 export interface CreateBin {
@@ -21,7 +20,6 @@ export interface CreateBin {
 export interface UpdateBin {
   binStorageClassId: number | null;
   isQuarantine: boolean | null;
-  isActive: boolean | null;
   maxCapacity: number | null;
 }
 

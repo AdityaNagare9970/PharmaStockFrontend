@@ -13,11 +13,12 @@ export class ItemService {
     return {
       itemId:           raw.itemId           ?? raw.ItemId           ?? 0,
       drugId:           raw.drugId           ?? raw.DrugId           ?? 0,
+      drugName:         raw.drugName         ?? raw.DrugName         ?? '',
+      uoMCode:          raw.uoMCode          ?? raw.UoMCode          ?? '',
       packSize:         raw.packSize         ?? raw.PackSize         ?? null,
-      uoM:              raw.uoM              ?? raw.UoM              ?? raw.UOM ?? 0,
+      uoMId:            raw.uoMId            ?? raw.UoMId            ?? raw.uoM ?? raw.UoM ?? raw.UOM ?? 0,
       conversionToEach: raw.conversionToEach ?? raw.ConversionToEach ?? 0,
       barcode:          raw.barcode          ?? raw.Barcode          ?? '',
-      status:           raw.status           ?? raw.Status           ?? false,
     };
   }
 
@@ -44,4 +45,5 @@ export class ItemService {
   delete(itemId: number) {
     return this.http.delete<ItemActionResponse>(`${this.apiUrl}/DeleteItem/${itemId}`);
   }
+
 }

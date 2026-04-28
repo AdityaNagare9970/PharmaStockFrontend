@@ -3,11 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { BinService } from '../../core/services/bin.service';
 import { LocationService } from '../../core/services/location.service';
+import { LookupService } from '../../core/services/lookup.service';
 import { Bin, CreateBin, BinStorageClass } from '../../core/models/bin.model';
 import { Location } from '../../core/models/location.model';
 
 type ActiveView = 'list' | 'add' | 'update';
-type StatusFilter = 'all' | 'active' | 'inactive';
 type QuarantineFilter = 'all' | 'yes' | 'no';
 
 interface UpdateForm {
@@ -16,7 +16,6 @@ interface UpdateForm {
   locationName: string;
   binStorageClassId: number;
   isQuarantine: boolean;
-  isActive: boolean;
   maxCapacity: number;
 }
 
@@ -36,17 +35,10 @@ export class BinComponent implements OnInit {
   searchQuery          = signal('');
   filterLocationId     = signal<number | ''>('');
   filterStorageClassId = signal<number | ''>('');
-  filterStatus         = signal<StatusFilter>('all');
   filterQuarantine     = signal<QuarantineFilter>('all');
 
-  // ── Derived: unique storage classes from loaded bins ──
-  storageClasses = computed<BinStorageClass[]>(() => {
-    const seen = new Map<number, string>();
-    for (const b of this.bins()) {
-      if (!seen.has(b.binStorageClassId)) seen.set(b.binStorageClassId, b.storageClass);
-    }
-    return Array.from(seen.entries()).map(([id, name]) => ({ id, name }));
-  });
+  // ── Storage classes from lookup API ──────────────────
+  storageClasses = signal<BinStorageClass[]>([]);
 
   // ── Active locations for create form ──────────────────
   activeLocations = computed(() => this.locations().filter(l => l.statusId));
@@ -70,10 +62,6 @@ export class BinComponent implements OnInit {
     const scId = this.filterStorageClassId();
     if (scId !== '') result = result.filter(b => b.binStorageClassId === scId);
 
-    const status = this.filterStatus();
-    if (status === 'active')   result = result.filter(b =>  b.isActive);
-    if (status === 'inactive') result = result.filter(b => !b.isActive);
-
     const qFilter = this.filterQuarantine();
     if (qFilter === 'yes') result = result.filter(b =>  b.isQuarantine);
     if (qFilter === 'no')  result = result.filter(b => !b.isQuarantine);
@@ -85,7 +73,6 @@ export class BinComponent implements OnInit {
     this.searchQuery()          !== '' ||
     this.filterLocationId()     !== '' ||
     this.filterStorageClassId() !== '' ||
-    this.filterStatus()         !== 'all' ||
     this.filterQuarantine()     !== 'all'
   );
 
@@ -98,8 +85,7 @@ export class BinComponent implements OnInit {
   // ── Update form (pre-filled from row click) ───────────
   updateData: UpdateForm = {
     binId: 0, code: '', locationName: '',
-    binStorageClassId: 0, isQuarantine: false,
-    isActive: true, maxCapacity: 0
+    binStorageClassId: 0, isQuarantine: false, maxCapacity: 0
   };
 
   // ── Delete confirmation ───────────────────────────────
@@ -113,12 +99,14 @@ export class BinComponent implements OnInit {
 
   constructor(
     private binService: BinService,
-    private locationService: LocationService
+    private locationService: LocationService,
+    private lookupService: LookupService
   ) {}
 
   ngOnInit() {
     this.loadAll();
     this.loadLocations();
+    this.loadStorageClasses();
   }
 
   // ── Helpers ──────────────────────────────────────────
@@ -127,7 +115,6 @@ export class BinComponent implements OnInit {
     this.searchQuery.set('');
     this.filterLocationId.set('');
     this.filterStorageClassId.set('');
-    this.filterStatus.set('all');
     this.filterQuarantine.set('all');
   }
 
@@ -157,6 +144,13 @@ export class BinComponent implements OnInit {
   loadLocations() {
     this.locationService.getAll().subscribe({
       next:  (data) => this.locations.set(data),
+      error: () => {}
+    });
+  }
+
+  loadStorageClasses() {
+    this.lookupService.getStorageClasses().subscribe({
+      next: (data) => this.storageClasses.set(data.map(e => ({ id: e.id, name: e.name }))),
       error: () => {}
     });
   }
@@ -193,7 +187,6 @@ export class BinComponent implements OnInit {
       locationName:      bin.locationName,
       binStorageClassId: bin.binStorageClassId,
       isQuarantine:      bin.isQuarantine,
-      isActive:          bin.isActive,
       maxCapacity:       bin.maxCapacity
     };
     this.setView('update');
@@ -209,7 +202,6 @@ export class BinComponent implements OnInit {
     this.binService.update(this.updateData.binId, {
       binStorageClassId: this.updateData.binStorageClassId,
       isQuarantine:      this.updateData.isQuarantine,
-      isActive:          this.updateData.isActive,
       maxCapacity:       this.updateData.maxCapacity
     })
       .pipe(finalize(() => this.isLoading.set(false)))
