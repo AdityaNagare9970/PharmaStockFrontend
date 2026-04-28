@@ -13,6 +13,6 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, _state: 
 
   if (authService.hasRole(...allowedRoles)) return true;
 
-  // Role not allowed → redirect to dashboard
-  return router.createUrlTree(['/dashboard']);
+  // Role not allowed → redirect to login
+  return router.createUrlTree(['/auth/login']);
 };

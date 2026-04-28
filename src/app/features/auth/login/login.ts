@@ -28,7 +28,7 @@ export class Login {
     // Already logged in → redirect to role-specific dashboard
     if (authService.isLoggedIn()) {
       const role = authService.getRole().toLowerCase().replace(/\s+/g, '');
-      const route = ROLE_ROUTES[role] ?? '/dashboard';
+      const route = ROLE_ROUTES[role] ?? '/auth/login';
       router.navigate([route]);
     }
   }
@@ -49,7 +49,7 @@ export class Login {
           this.authService.saveToken(res.token);
           this.authService.saveRole(res.role);
           const role = res.role.toLowerCase().replace(/\s+/g, '');
-          const route = ROLE_ROUTES[role] ?? '/dashboard';
+          const route = ROLE_ROUTES[role] ?? '/auth/login';
           this.router.navigate([route]);
         },
         error: (err) => {
